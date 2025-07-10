@@ -11,11 +11,11 @@ export const auth = betterAuth({
 	}),
 	plugins: [nextCookies()], // make sure this is the last plugin in the array
 
-	// TODO: Uncomment this when we have a way to send emails use resend
-	// emailAndPassword: {
-	// 	enabled: true,
-	// 	requireEmailVerification: true,
-	// },
+	emailAndPassword: {
+		enabled: true,
+		// TODO: add email verification -> MVP is not required
+		// requireEmailVerification: true,
+	},
 
 	// emailVerification: {
 	// 	sendOnSignUp: true,
@@ -26,20 +26,21 @@ export const auth = betterAuth({
 	// 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	// 		const email = user.email;
 
+
 	// 		// await sendEmail({
 	// 		// 	to: email,
 	// 		// 	subject: "Verify your email",
 	// 		// });
 	// 	},
 	// },
-	socialProviders: {
-		github: {
-			clientId: process.env.GITHUB_CLIENT_ID ?? "",
-			clientSecret: process.env.GITHUB_CLIENT_SECRET ?? "",
-		},
-		discord: {
-			clientId: process.env.DISCORD_CLIENT_ID ?? "",
-			clientSecret: process.env.DISCORD_CLIENT_SECRET ?? "",
-		},
-	},
+	// socialProviders: {
+	// 	github: {
+	// 		clientId: process.env.GITHUB_CLIENT_ID ?? "",
+	// 		clientSecret: process.env.GITHUB_CLIENT_SECRET ?? "",
+	// 	},
+	// 	discord: {
+	// 		clientId: process.env.DISCORD_CLIENT_ID ?? "",
+	// 		clientSecret: process.env.DISCORD_CLIENT_SECRET ?? "",
+	// 	},
+	// },
 });

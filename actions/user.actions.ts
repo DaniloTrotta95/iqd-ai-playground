@@ -35,3 +35,19 @@ export const signOut = async () => {
 		redirect("/");
 	}
 };
+
+export const signInWithEmail = async ({
+	email,
+	password,
+}: {
+	email: string;
+	password: string;
+}) => {
+	const response = await auth.api.signInEmail({
+		body: {
+			email,
+			password,
+		},
+		headers: await headers(),
+	});
+};

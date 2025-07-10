@@ -1,31 +1,28 @@
-import { signInWithDiscord, signInWithGithub } from "@/actions/user.actions";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
-import Link from "next/link";
-import SignOut from "./signOut";
-import { Button } from "./ui/button";
+"use client";
 
-export default async function Navbar() {
-	const session = await auth.api.getSession({
-		headers: await headers(),
-	});
-	console.log("session", session);
+import Link from "next/link";
+import { Button } from "./ui/button";
+import Image from "next/image";
+import UserDropdown from "./user-dropdown";
+import { useSession } from "@/lib/auth-client";
+
+export default function Navbar() {
+	const { data: session, isPending } = useSession();
+
 	return (
-		<nav className="flex justify-between items-center py-3 px-4 fixed top-0 left-0 right-0 z-50 bg-slate-100">
+		<nav className="flex justify-between items-center py-3 h-16 px-4 fixed border-b border-sidebar-border top-0 left-0 right-0 z-50 bg-white">
 			<Link href="/" className="text-xl font-bold">
-				better-auth
+				<Image src="/logo.png" alt="logo" width={180} height={32} />
 			</Link>
-			<Link href="/dashboard" className="text-xl font-bold">
-				Dashboard
-			</Link>
-			{/* <AuthButtons /> */}
-			{session ? (
-				// <Button onClick={() => {}}>Sign out</Button>
-				<SignOut />
+			{isPending ? (
+				<div className="h-10 w-20 bg-gray-200 animate-pulse rounded"></div>
+			) : session ? (
+				<UserDropdown user={session.user} />
 			) : (
 				<>
-					<Button onClick={signInWithGithub}>Sign in with Github</Button>
-					<Button onClick={signInWithDiscord}>Sign in with Discord</Button>
+					<Link href="/sign-in">
+						<Button>Anmelden</Button>
+					</Link>
 				</>
 			)}
 		</nav>

@@ -17,5 +17,18 @@ const signInWithDiscord = async () => {
 	});
 };
 
+const signUpWithEmail = async (data: any) => {
+	const response = await authClient.signUp.email(data);
+	return response;
+};
+
+const signInWithEmail = async (data: any) => {
+	const response = await authClient.signIn.email(data);
+	return response;
+};
+
+
 export const { signIn, signUp, useSession, signOut } = authClient;
-export { signInWithGithub, signInWithDiscord };
+export type Session = typeof authClient.$Infer.Session;
+export type User = typeof authClient.$Infer.Session.user;
+export { signInWithGithub, signInWithDiscord, signUpWithEmail, signInWithEmail };
