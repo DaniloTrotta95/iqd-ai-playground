@@ -1,5 +1,11 @@
+import AgentTest from "@/components/agent-test";
 import React from "react";
 
 export default function DashboardPage() {
-	return <div>Dashboard</div>;
+	return (
+		<section>
+			<h1 className="text-2xl font-bold">Dashboard</h1>
+			<AgentTest />
+		</section>
+	);
 }
