@@ -3,8 +3,12 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useState, useEffect } from "react";
 import {createWorkflow, workflowEvent} from "@llama-flow/core"
+import { createPublisher, getPublishers } from "@/actions/publisher.actions";
+import { createClient } from "@/actions/client.actions";
 
 interface ParsedEvent {
   type: string;
@@ -15,6 +19,17 @@ interface ParsedEvent {
 export default function AgentTest() {
     const [events, setEvents] = useState<ParsedEvent[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [publisherName, setPublisherName] = useState("");
+    const [isCreatingPublisher, setIsCreatingPublisher] = useState(false);
+    
+    // Client creation state
+    const [clientName, setClientName] = useState("");
+    const [clientUrl, setClientUrl] = useState("");
+    const [selectedPublisherId, setSelectedPublisherId] = useState("");
+    const [selectedTopic, setSelectedTopic] = useState<'news' | 'business' | 'finance' | 'sport' | 'lifestyle' | 'science' | 'family' | 'travel'>('news');
+    const [isCreatingClient, setIsCreatingClient] = useState(false);
+    const [publishers, setPublishers] = useState<Array<{id: string, name: string, createdAt: Date, updatedAt: Date}>>([]);
+
 
     const parseEvent = (eventData: string): ParsedEvent | null => {
         try {
@@ -212,15 +227,197 @@ export default function AgentTest() {
         };
       }
 
+    const handleCreatePublisher = async () => {
+        if (!publisherName.trim()) {
+            alert("Please enter a publisher name");
+            return;
+        }
+
+        setIsCreatingPublisher(true);
+        try {
+            const result = await createPublisher({ name: publisherName.trim() });
+            
+            if (result.success) {
+                alert("Publisher created successfully!");
+                setPublisherName(""); // Clear the input
+            } else {
+                alert(`Failed to create publisher: ${result.error}`);
+            }
+        } catch (error) {
+            console.error("Error creating publisher:", error);
+            alert("An error occurred while creating the publisher");
+        } finally {
+            setIsCreatingPublisher(false);
+        }
+    };
+
+    // Load publishers on component mount
+    useEffect(() => {
+        const loadPublishers = async () => {
+            try {
+                const result = await getPublishers();
+                if (result.success && result.data) {
+                    setPublishers(result.data);
+                }
+            } catch (error) {
+                console.error("Error loading publishers:", error);
+            }
+        };
+        loadPublishers();
+    }, []);
+
+    const handleCreateClient = async () => {
+        if (!clientName.trim() || !selectedPublisherId) {
+            alert("Please enter a client name and select a publisher");
+            return;
+        }
+
+        setIsCreatingClient(true);
+        try {
+            const result = await createClient({
+                publisherId: selectedPublisherId,
+                name: clientName.trim(),
+                url: clientUrl.trim() || undefined,
+                topic: selectedTopic,
+            });
+            
+            if (result.success) {
+                alert("Client created successfully!");
+                // Clear the form
+                setClientName("");
+                setClientUrl("");
+                setSelectedPublisherId("");
+                setSelectedTopic('news');
+            } else {
+                alert(`Failed to create client: ${result.error}`);
+            }
+        } catch (error) {
+            console.error("Error creating client:", error);
+            alert("An error occurred while creating the client");
+        } finally {
+            setIsCreatingClient(false);
+        }
+    };
+
 	return (
 		<div className="p-4 space-y-4">
-			<Button 
-				onClick={handleRunAgent} 
-				disabled={isLoading}
-				className="w-full"
-			>
-				{isLoading ? "Running Agent..." : "Run Agent"}
-			</Button>
+			{/* Publisher Creation Section */}
+			<Card>
+				<CardHeader>
+					<CardTitle>Create Publisher</CardTitle>
+				</CardHeader>
+				<CardContent className="space-y-4">
+					<div className="space-y-2">
+						<Label htmlFor="publisher-name">Publisher Name</Label>
+						<Input
+							id="publisher-name"
+							value={publisherName}
+							onChange={(e) => setPublisherName(e.target.value)}
+							placeholder="Enter publisher name..."
+							disabled={isCreatingPublisher}
+						/>
+					</div>
+					<Button 
+						onClick={handleCreatePublisher}
+						disabled={isCreatingPublisher || !publisherName.trim()}
+						className="w-full"
+					>
+						{isCreatingPublisher ? "Creating Publisher..." : "Create Publisher"}
+					</Button>
+				</CardContent>
+			</Card>
+
+			{/* Client Creation Section */}
+			<Card>
+				<CardHeader>
+					<CardTitle>Create Client</CardTitle>
+				</CardHeader>
+				<CardContent className="space-y-4">
+					<div className="space-y-2">
+						<Label htmlFor="client-name">Client Name</Label>
+						<Input
+							id="client-name"
+							value={clientName}
+							onChange={(e) => setClientName(e.target.value)}
+							placeholder="Enter client name..."
+							disabled={isCreatingClient}
+						/>
+					</div>
+					
+					<div className="space-y-2">
+						<Label htmlFor="client-url">Website URL (Optional)</Label>
+						<Input
+							id="client-url"
+							value={clientUrl}
+							onChange={(e) => setClientUrl(e.target.value)}
+							placeholder="https://example.com"
+							disabled={isCreatingClient}
+						/>
+					</div>
+
+					<div className="space-y-2">
+						<Label htmlFor="publisher-select">Publisher</Label>
+						<select
+							id="publisher-select"
+							value={selectedPublisherId}
+							onChange={(e) => setSelectedPublisherId(e.target.value)}
+							disabled={isCreatingClient}
+							className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+						>
+							<option value="">Select a publisher...</option>
+							{publishers.map((publisher) => (
+								<option key={publisher.id} value={publisher.id}>
+									{publisher.name}
+								</option>
+							))}
+						</select>
+					</div>
+
+					<div className="space-y-2">
+						<Label htmlFor="topic-select">Topic</Label>
+						<select
+							id="topic-select"
+							value={selectedTopic}
+							onChange={(e) => setSelectedTopic(e.target.value as any)}
+							disabled={isCreatingClient}
+							className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+						>
+							<option value="news">News</option>
+							<option value="business">Business</option>
+							<option value="finance">Finance</option>
+							<option value="sport">Sport</option>
+							<option value="lifestyle">Lifestyle</option>
+							<option value="science">Science</option>
+							<option value="family">Family</option>
+							<option value="travel">Travel</option>
+						</select>
+					</div>
+
+					<Button 
+						onClick={handleCreateClient}
+						disabled={isCreatingClient || !clientName.trim() || !selectedPublisherId}
+						className="w-full"
+					>
+						{isCreatingClient ? "Creating Client..." : "Create Client"}
+					</Button>
+				</CardContent>
+			</Card>
+
+			{/* Agent Test Section */}
+			<Card>
+				<CardHeader>
+					<CardTitle>Agent Test</CardTitle>
+				</CardHeader>
+				<CardContent>
+					<Button 
+						onClick={handleRunAgent} 
+						disabled={isLoading}
+						className="w-full"
+					>
+						{isLoading ? "Running Agent..." : "Run Agent"}
+					</Button>
+				</CardContent>
+			</Card>
 			
 			{events.length > 0 && (
 				<Card className="mt-4">

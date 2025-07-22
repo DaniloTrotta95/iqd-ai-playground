@@ -15,6 +15,15 @@ const badgeVariants = cva(
         destructive:
           "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
         outline: "text-foreground",
+        // Soft color variants for topics
+        news: "border-orange-200 bg-orange-50 text-orange-700 hover:bg-orange-100",
+        business: "border-lime-200 bg-lime-50 text-lime-700 hover:bg-lime-100",
+        finance: "border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100",
+        sport: "border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100",
+        lifestyle: "border-fuchsia-200 bg-fuchsia-50 text-fuchsia-700 hover:bg-fuchsia-100",
+        science: "border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100",
+        family: "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100",
+        travel: "border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100",
       },
     },
     defaultVariants: {

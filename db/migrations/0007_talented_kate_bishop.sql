@@ -1,0 +1,1 @@
+ALTER TABLE "client_topics" ALTER COLUMN "client_id" DROP NOT NULL;

@@ -19,8 +19,8 @@ const items = [
     icon: Home,
   },
   {
-    title: "Angebote",
-    url: "/proposals",
+    title: "Portfolio",
+    url: "/portfolio",
     icon: Inbox,
   },
   {
