@@ -1,15 +1,130 @@
 import { RequestyLLM } from "@/lib/requesty";
 import { createWorkflow, workflowEvent } from "@llamaindex/workflow-core";
+import { agent, agentStreamEvent } from "@llamaindex/workflow";
+import { tool } from "llamaindex"
 import { NextResponse } from "next/server";
 import { createStatefulMiddleware } from "@llamaindex/workflow-core/middleware/state";
 import { pipeline } from "node:stream/promises";
 import { z } from "zod";
+import { db } from "@/db/drizzle";
+import { client, clientTopics, publisher, topics } from "@/db/schema";
+import { requesty } from "@requesty/llamaindex";
+
 // import { collect } from "@llamaindex/workflow-core/stream/consumer";
 // import { until } from "@llamaindex/workflow-core/stream/until";
 // import { filter } from "@llamaindex/workflow-core/stream/filter";
+import { eq, asc } from "drizzle-orm";
 
+const salesForceCustomerSchema = z.object({
+    contactId: z.string().describe("The ID of the contact in SalesForce"),
+    name: z.string().describe("The name of the contact"),
+    email: z.string().describe("The email of the contact"),
+    phone: z.string().describe("The phone of the contact"),
+    accountId: z.string().describe("The ID of the account in SalesForce linked to the contact"),
+    accountName: z.string().describe("The name of the account in SalesForce linked to the contact"),
+    opportunities: z.array(z.object({
+        id: z.string().describe("The ID of the opportunity in SalesForce linked to the account"),
+        opportunityName: z.string().describe("The name of the opportunity in SalesForce linked to the account"),
+        stage: z.string().describe("The stage of the opportunity in SalesForce linked to the account"),
+        closeDate: z.string().describe("The close date of the opportunity in SalesForce linked to the account"),
+    })),
+    hasBeenFound: z.boolean().describe("Whether the contact has been found in SalesForce"),
+})
+
+const getSalesForceAPIAccessToken = async () => {
+    console.log("Fetching access token... in getSalesForceAPIAccessToken")
+    
+    const response = await fetch(`https://iqdigital--sprintsv2.sandbox.my.salesforce.com/services/oauth2/token?username=${process.env.SALESFORCE_USERNAME}&password=${process.env.SALESFORCE_PASSWORD}${process.env.SALESFORCE_SECURITY_TOKEN}&grant_type=password&client_id=${process.env.SALESFORCE_ACCESS_KEY}&client_secret=${process.env.SALESFORCE_SECRET}`, {
+        method: "POST",
+        // body: JSON.stringify({
+        //     grant_type: "password",
+        //     client_id: process.env.SALESFORCE_ACCESS_KEY,
+        //     client_secret: process.env.SALESFORCE_SECRET,
+        //     username: process.env.SALESFORCE_USERNAME,
+        //     password: `${process.env.SALESFORCE_PASSWORD}${process.env.SALESFORCE_SECURITY_TOKEN}`,
+        // }),
+    });
+    console.log("Response is ", response)
+    const data = await response.json();
+    console.log("Data is ", data)
+    return data.access_token;
+}
+
+const searchContactInSalesForce = async ({
+    email,
+    accessToken,
+}: {
+    email: string;
+    accessToken: string;
+}) => {
+    console.log("Searching for contact in SalesForce with email: ", email)
+    console.log("fetching access token...")
+    // const accessToken = await getSalesForceAPIAccessToken();
+    // return {
+    //     accessToken,
+    // };
+    console.log("access token fetched:", accessToken)
+    console.log("fetching contact...")
+    const response = await fetch(`https://iqdigital--sprintsv2.sandbox.my.salesforce.com/services/data/v55.0/query/?q=SELECT+Id,+FirstName,+LastName,+Email,+Phone,+Account.Id,+Account.Name+FROM+Contact+WHERE+Email='${email}'`, {
+        headers: {
+            "Authorization": `Bearer ${accessToken}`,
+        },
+        method: "GET",
+    });
+    const data = await response.json();
+    const contact = data.records[0];
+    console.log("contact fetched:", JSON.stringify(contact, null, 2))
+    return JSON.stringify(contact);
+  
+}
+const searchOpportunitiesInSalesForce = async ({
+    accountId,
+    accessToken,
+}: {
+    accountId: string;
+    accessToken: string;
+}) => {
+
+    const response = await fetch(`https://iqdigital--sprintsv2.sandbox.my.salesforce.com/services/data/v55.0/query/?q=SELECT+Id,+Name,+StageName,+CloseDate+FROM+Opportunity+WHERE+AccountId='${accountId}'`, {
+        headers: {
+            "Authorization": `Bearer ${accessToken}`,
+        },
+        method: "GET",
+    });
+    const data = await response.json();
+    const opportunities = data.records;
+    console.log("opportunities fetched:", JSON.stringify(opportunities, null, 2))
+    return JSON.stringify(opportunities);
+  
+}
+
+
+
+
+    const searchContactInSalesForceTool = tool({
+        name: "searchContactInSalesForce",
+        description: "Search for a contact in SalesForce using a email address",
+        parameters: z.object({
+            email: z.string().describe("Email address of the contact to search for"),
+            accessToken: z.string().describe("Access token for the SalesForce API"),
+        }).describe("The email address of the contact to search for"),
+        execute: searchContactInSalesForce
+        
+    })
+
+    const searchOpportunitiesInSalesForceTool = tool({
+        name: "searchOpportunitiesInSalesForce",
+        description: "Search for opportunities in SalesForce using an account ID",
+        parameters: z.object({
+            accountId: z.string().describe("Account ID of the account to search for"),
+            accessToken: z.string().describe("Access token for the SalesForce API"),
+        }).describe("The account ID of the account to search for"),
+        execute: searchOpportunitiesInSalesForce
+    })
 
 const TEST_ANFRAGE = `
+Email von:  daniel.maffei@phdmedia.de
+
 Hi Laureen,
 
  
@@ -38,19 +153,27 @@ Melde dich gerne, sollte es noch Fragen geben 😊
 
 Liebe Grüße
 
-Paula
+Alessandra
 `
 
 const offerSchema = z.object({
     customer: z.string().describe("Name des Kunden"),
+    agency: z.string().describe("Name der Agentur"),
+    contact: z.string().describe("Name des Kontakts"),
+    email: z.string().describe("Email des Kontakts"),
     campagneName: z.string().describe("Name der Kampagne"),
     zeitraum: z.string().describe("Zeitraum der Kampagne"),
-    umfelder: z.array(z.string()).describe("Umfelder der Kampagne"),
+    produkt: z.string().describe("Das vom Kunden gewünschte Produkt welches er bei uns buchen möchte. Z.B. ROC Reise bedeutet Rotation on Channel auf dem Channel Reise"),
+    umfelder: z.array(z.object({
+        seite: z.string().describe("Gewünschte Seite auf der die Kampagne platziert werden soll"),
+        rubrik: z.string().describe("Gewümschte Rubrik innerhalb der Seite auf der die Kampagne platziert werden soll"),
+    })),
     formate: z.array(z.string()).describe("Formate der Kampagne"),
     devices: z.array(z.string()).describe("Devices der Kampagne"),
     budget: z.string().describe("Budget der Kampagne"),
     wichtige_informationen: z.array(z.string()).describe("Wichtige Informationen der Kampagne"),
   });
+
 
 
 
@@ -62,10 +185,21 @@ export async function GET() {
             controller.enqueue(encoder.encode("data: Connected to workflow\n\n"));
 
             // init requesty client 
-            const llm = new RequestyLLM({
+            const llm = requesty({
                 baseURL: process.env.REQUESTY_BASE_URL, 
                 apiKey: process.env.REQUESTY_API_KEY, 
-                model: "openai/gpt-4o-mini" 
+                model: "google/gemini-2.0-flash-001" 
+            })
+            const llm4o = requesty({
+                baseURL: process.env.REQUESTY_BASE_URL, 
+                apiKey: process.env.REQUESTY_API_KEY, 
+                model: "openai/gpt-4o" 
+            })
+
+            const salesForceAgent = agent({
+                name: "salesForceAgent",
+                tools: [searchContactInSalesForceTool, searchOpportunitiesInSalesForceTool],
+                llm: llm,
             })
 
              // init workflow -> Parse the request, get the offer data (eventual add new step, 
@@ -74,21 +208,30 @@ export async function GET() {
                 anfrage: string | null,
                }>()
 
+            const fetchCustomerDataEvent = workflowEvent<{
+                customerData: any | null,
+            }>()
+
             const orchestrateEvent = workflowEvent<{
                 offerData: z.infer<typeof offerSchema> | null,
+                salesForceCustomer: z.infer<typeof salesForceCustomerSchema> | null,
             }>()
 
             // Parallel events Branching 
           
             const fetchAGMEvent = workflowEvent<{
-                offerData: z.infer<typeof offerSchema> | null,
+                offerData?: z.infer<typeof offerSchema> | null,
             }>()
-            const testEvent = workflowEvent<{
+            const fetchPortfolioEvent = workflowEvent<{
                 offerData: z.infer<typeof offerSchema> | null,
             }>()
 
             const BranchingCompleteEvent = workflowEvent<{
-                res: string | null,
+                fetchPortfolio: {
+                    inOurPortfolio: string[] | null,
+                    notInOurPortfolio: string[] | null,
+                } | null,
+                fetchAGM: string | null,
             }>()
 
 
@@ -133,19 +276,55 @@ export async function GET() {
         let result = await llm.complete({prompt:prompt, responseFormat: offerSchema})
 
         const parsedResult = offerSchema.parse(JSON.parse(result.text))
-        console.log("Result is ", parsedResult)
-        return orchestrateEvent.with({offerData:parsedResult})
+        // console.log("Result is ", parsedResult)
+        return fetchCustomerDataEvent.with({customerData:parsedResult})
         // return orchestrateEvent.with(result.text)
+      });
+
+
+      workflow.handle([fetchCustomerDataEvent], async (fetchCustomerData) => {
+        console.log("Fetching customer data, data is ", fetchCustomerData.data)
+
+        const accessToken = await getSalesForceAPIAccessToken();
+
+        console.log("Access token is ", accessToken)
+
+        const salesForceResult = await salesForceAgent.run(`Find the contact for the email ${fetchCustomerData.data.customerData.email} in SalesForce, use the access token ${accessToken}, 
+            after getting the contact, fetch all opportunieties for the account liked to the contact, use the accountId for this.
+            Return the contact, with all the information and the opportunities in a structured way.
+            If the contact has not been found, just return the text "NOT FOUND"`)
+        
+        console.log("SalesForce result is ", salesForceResult.data)
+        const structuredSalesForceResult = await llm.complete({
+            prompt: `For the Email: ${fetchCustomerData.data.customerData.email} we got the following Salesforce result: ${salesForceResult.data.result}. 
+            Extract the important information from the Salesforce result, 
+            if the result contains the text "NOT FOUND", return the field hasBeenFound as false, try to fill out the fields with the information you have, maybe you can derivate the name from the email, but set the fields to null when you are certain that you dont have the information"`,
+                responseFormat: salesForceCustomerSchema,
+        })
+
+        const parsedSalesForceResult = salesForceCustomerSchema.parse(JSON.parse(structuredSalesForceResult.text))
+
+        console.log("Parsed sales force result is ", parsedSalesForceResult)
+       
+
+        return orchestrateEvent.with({offerData:fetchCustomerData.data.customerData, salesForceCustomer:parsedSalesForceResult})
       });
 
       workflow.handle([orchestrateEvent], async (orchestrate) => {
         const { sendEvent, stream} = getContext()
-        sendEvent(fetchAGMEvent.with({offerData:orchestrate.data.offerData}))
-        sendEvent(testEvent.with({ offerData: orchestrate.data.offerData }))
+        
+        // Send the offerData and salesForceCustomer data once
+        sendEvent(workflowEvent<{offerData: any, salesForceCustomer: any}>().with({
+          offerData: orchestrate.data.offerData,
+          salesForceCustomer: orchestrate.data.salesForceCustomer
+        }))
+        
+        // Send the branching events without offerData
+        sendEvent(fetchAGMEvent.with({}))
+        sendEvent(fetchPortfolioEvent.with({ offerData: orchestrate.data.offerData }))
        
        
        let condition = 0 
-
 
         try {
             const results = await stream
@@ -156,22 +335,10 @@ export async function GET() {
             })
             .toArray()
 
-            console.log("--------------------------------")
-            console.log("Results are ", results)
             sendEvent(stopEvent.with({result: results.map((ev) => ev.data.res).join(", ")}))
         } catch (error) {
             console.error("Error is ", error)
         }
-
-
-
-
-
-
-
-
-
-       
       });
 
 
@@ -180,14 +347,82 @@ export async function GET() {
 
         // TODO: Fetch AGMA API 
         
-        console.log("Fetching AGM, data is ", fetchAGM.data)
-            return BranchingCompleteEvent.with({res: "Fetching the AGMA API, for the request"})
+        // console.log("Fetching AGM, data is ", fetchAGM.data)
+
+
+            return BranchingCompleteEvent.with({fetchAGM: 'Fetching AGMA API', fetchPortfolio: null})
 
       });
 
-      workflow.handle([testEvent], async (test) => {
-        console.log("Test event, data is ", test.data)
-            return BranchingCompleteEvent.with({res: "Fetching the Product and Price Data, for the request"})
+      workflow.handle([fetchPortfolioEvent], async (fetchPortfolio) => {
+        // console.log("Fetch Portfolio event, data is ", fetchPortfolio.data)
+
+        // Get the Umfelder from the offer data
+        const umfelder = fetchPortfolio.data.offerData?.umfelder
+
+        // Get the mandanten from DB 
+        const mandanten = await db
+        .select({
+            id: client.id,
+            name: client.name,
+            url: client.url,
+            clientType: client.clientType,
+            createdAt: client.createdAt,
+            updatedAt: client.updatedAt,
+            publisherId: client.publisherId,
+            publisherName: publisher.name,
+            topicId: clientTopics.topicId,
+            topicName: topics.name,
+            topicLabel: topics.label,
+        })
+        .from(client)
+        .leftJoin(publisher, eq(client.publisherId, publisher.id))
+        .leftJoin(clientTopics, eq(client.id, clientTopics.clientId))
+        .leftJoin(topics, eq(clientTopics.topicId, topics.id))
+        .orderBy(asc(client.createdAt));
+
+        // console.log("Mandanten are ", mandanten)
+        // console.log("Umfelder are ", umfelder)
+
+        // Fix: Await the llm.complete call and ensure correct typing
+        const mandantenUmfelderSchema = z.object({
+          inOurPortfolio: z.array(z.string()).describe("Seiten aus dem Briefing, die in unserem Portfolio verfügbar sind"),
+          notInOurPortfolio: z.array(z.string()).describe("Seiten aus dem Briefing, die NICHT in unserem Portfolio verfügbar sind"),
+        });
+        
+        const mandantenUmfelder = await llm.complete({
+          prompt: `Du bist ein Experte für unser Kunden Portfolio. Wir sind ein digitaler Vermarkter und haben ein Portfolio von Mandanten bei unterschiedlichen Publishern für Digital, Newsletter und Audio Vermarktung.
+
+          UNSER PORTFOLIO:
+          ${JSON.stringify(mandanten, null, 2)}
+
+          BRIEFING ANFORDERUNGEN:
+          ${JSON.stringify(fetchPortfolio.data.offerData?.umfelder, null, 2)}
+
+          AUFGABE:
+          Vergleiche die im Briefing gewünschten Seiten mit unserem Portfolio. Für jede gewünschte Seite aus dem Briefing:
+          1. Prüfe ob wir diese Seite in unserem Portfolio haben
+          2. Berücksichtige dabei den Seitennamen und mögliche abkürzungen
+          3. Wenn eine Seite die im briefing gefordert wird und in unserem Portfolio ist, füge sie zu "inOurPortfolio" hinzu
+          4. Wenn eine Seite die im briefing gefordert wird NICHT in unserem Portfolio ist, füge sie zu "notInOurPortfolio" hinzu
+
+          WICHTIG: 
+          - Vergleiche Seitennamen. Wir haben abkürzungen für manche Seiten, die FAZ bedeutet Frankfurter Allgemeine Zeitung, beachte dies bitte.
+          - Sei präzise bei der Zuordnung
+          - Wenn alle gewünschten Seiten/Rubriken in unserem Portfolio sind, gib leere Arrays zurück`,
+          responseFormat: mandantenUmfelderSchema
+        });
+
+        const parsedMandantenUmfelder = mandantenUmfelderSchema.parse(JSON.parse(mandantenUmfelder.text))
+
+        // console.log("Mandanten Umfelder are ", parsedMandantenUmfelder)
+
+        // const parsedMandantenUmfelder = mandantenUmfelderSchema.parse(JSON.parse(mandantenUmfelder.text))
+
+
+
+        
+            return BranchingCompleteEvent.with({fetchPortfolio: {inOurPortfolio: parsedMandantenUmfelder.inOurPortfolio, notInOurPortfolio: parsedMandantenUmfelder.notInOurPortfolio}, fetchAGM: null})
       });
 
 
@@ -200,7 +435,40 @@ export async function GET() {
        pipeline(stream, async function (source) {
         for await (const event of source as any) {
           console.log("Got a new event", event.data)
-          controller.enqueue(encoder.encode("data: " + JSON.stringify(event.data)+"\n\n"));  
+          
+          // Send individual events based on the event type
+          if (event.data.anfrage) {
+            controller.enqueue(encoder.encode("data: " + JSON.stringify({anfrage: event.data.anfrage}) + "\n\n"));
+          }
+          
+          if (event.data.customerData) {
+            controller.enqueue(encoder.encode("data: " + JSON.stringify({customerData: event.data.customerData}) + "\n\n"));
+          }
+          
+          // Send offerData and salesForceCustomer together from orchestrateEvent
+          if (event.data.offerData && event.data.salesForceCustomer) {
+            controller.enqueue(encoder.encode("data: " + JSON.stringify({offerData: event.data.offerData}) + "\n\n"));
+            controller.enqueue(encoder.encode("data: " + JSON.stringify({salesForceCustomer: event.data.salesForceCustomer}) + "\n\n"));
+          }
+          
+          if (event.data.fetchPortfolio) {
+            if (event.data.fetchPortfolio.inOurPortfolio && event.data.fetchPortfolio.inOurPortfolio.length > 0) {
+              controller.enqueue(encoder.encode("data: " + JSON.stringify({inOurPortfolio: event.data.fetchPortfolio.inOurPortfolio}) + "\n\n"));
+            }
+            
+            if (event.data.fetchPortfolio.notInOurPortfolio && event.data.fetchPortfolio.notInOurPortfolio.length > 0) {
+              controller.enqueue(encoder.encode("data: " + JSON.stringify({notInOurPortfolio: event.data.fetchPortfolio.notInOurPortfolio}) + "\n\n"));
+            }
+          }
+          
+          if (event.data.fetchAGM) {
+            controller.enqueue(encoder.encode("data: " + JSON.stringify({fetchAGM: event.data.fetchAGM}) + "\n\n"));
+          }
+          
+          if (event.data.result) {
+            controller.enqueue(encoder.encode("data: " + JSON.stringify({result: event.data.result}) + "\n\n"));
+          }
+          
           if (stopEvent.include(event)) {
             controller.close();
           }

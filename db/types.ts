@@ -16,6 +16,7 @@ export type ClientWithPublisher = {
 	id: string;
 	name: string;
 	url: string | null;
+	agmaEntityId: string | null;
 	clientType: 'display' | 'newsletter' | 'podcast';
 	createdAt: Date;
 	updatedAt: Date;

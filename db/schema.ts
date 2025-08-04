@@ -69,6 +69,7 @@ export const client = pgTable("client", {
 		.references(() => publisher.id, { onDelete: "cascade" }),
 	name: text("name").notNull(),
 	url: text("url"),
+	agmaEntityId: text("agma_entity_id"),
 	clientType: clientTypeEnum("client_type").notNull().default('display'),
 	createdAt: timestamp("created_at").notNull(),
 	updatedAt: timestamp("updated_at").notNull(),

@@ -40,6 +40,7 @@ export default function EditClientDialog({ client, onClientUpdated, open: extern
   const [formData, setFormData] = useState({
     name: client.name,
     url: client.url || "",
+    agmaEntityId: client.agmaEntityId || "",
     selectedTopics: client.topics.map(topic => ({
       value: topic.id,
       label: topic.label
@@ -67,6 +68,7 @@ export default function EditClientDialog({ client, onClientUpdated, open: extern
     setFormData({
       name: client.name,
       url: client.url || "",
+      agmaEntityId: client.agmaEntityId || "",
       selectedTopics: client.topics.map(topic => ({
         value: topic.id,
         label: topic.label
@@ -84,6 +86,7 @@ export default function EditClientDialog({ client, onClientUpdated, open: extern
         id: client.id,
         name: formData.name,
         url: formData.url || undefined,
+        agmaEntityId: formData.agmaEntityId || undefined,
         topicIds: formData.selectedTopics.map(topic => topic.value),
         clientType: formData.clientType as 'display' | 'newsletter' | 'podcast',
       });
@@ -95,6 +98,7 @@ export default function EditClientDialog({ client, onClientUpdated, open: extern
         setFormData({
           name: client.name,
           url: client.url || "",
+          agmaEntityId: client.agmaEntityId || "",
           selectedTopics: client.topics.map(topic => ({
             value: topic.id,
             label: topic.label
@@ -119,6 +123,7 @@ export default function EditClientDialog({ client, onClientUpdated, open: extern
       setFormData({
         name: client.name,
         url: client.url || "",
+        agmaEntityId: client.agmaEntityId || "",
         selectedTopics: client.topics.map(topic => ({
           value: topic.id,
           label: topic.label
@@ -171,6 +176,20 @@ export default function EditClientDialog({ client, onClientUpdated, open: extern
                 }
                 className="col-span-3"
                 placeholder="https://example.com"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="agmaEntityId" className="text-right">
+                AGMA Entity ID
+              </Label>
+              <Input
+                id="agmaEntityId"
+                value={formData.agmaEntityId}
+                onChange={(e) =>
+                  setFormData({ ...formData, agmaEntityId: e.target.value })
+                }
+                className="col-span-3"
+                placeholder="AGMA Entity ID"
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">

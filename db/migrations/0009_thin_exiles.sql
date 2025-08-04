@@ -1,0 +1,1 @@
+ALTER TABLE "client" ADD COLUMN "agma_entity_id" text;

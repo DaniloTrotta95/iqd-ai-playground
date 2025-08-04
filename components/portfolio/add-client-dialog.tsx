@@ -27,6 +27,7 @@ export default function AddClientDialog({ onClientAdded, className }: AddClientD
     // Client creation state
     const [clientName, setClientName] = useState("");
     const [clientUrl, setClientUrl] = useState("");
+    const [agmaEntityId, setAgmaEntityId] = useState("");
     const [selectedPublisherId, setSelectedPublisherId] = useState("");
     const [selectedTopics, setSelectedTopics] = useState<Array<{value: string, label: string}>>([]);
     const [selectedClientType, setSelectedClientType] = useState<'display' | 'newsletter' | 'podcast'>('display');
@@ -100,6 +101,7 @@ export default function AddClientDialog({ onClientAdded, className }: AddClientD
                 publisherId: selectedPublisherId,
                 name: clientName.trim(),
                 url: clientUrl.trim() || undefined,
+                agmaEntityId: agmaEntityId.trim() || undefined,
                 topicIds: selectedTopics.map(topic => topic.value),
                 clientType: selectedClientType,
             });
@@ -109,6 +111,7 @@ export default function AddClientDialog({ onClientAdded, className }: AddClientD
                 // Clear the form
                 setClientName("");
                 setClientUrl("");
+                setAgmaEntityId("");
                 setSelectedPublisherId("");
                 setSelectedTopics([]);
                 setIsOpen(false);
@@ -133,6 +136,7 @@ export default function AddClientDialog({ onClientAdded, className }: AddClientD
             // Reset form when dialog closes
             setClientName("");
             setClientUrl("");
+            setAgmaEntityId("");
             setSelectedPublisherId("");
             setSelectedTopics([]);
             setPublisherName("");
@@ -210,6 +214,17 @@ export default function AddClientDialog({ onClientAdded, className }: AddClientD
                                 value={clientUrl}
                                 onChange={(e) => setClientUrl(e.target.value)}
                                 placeholder="https://example.com"
+                                disabled={isCreatingClient}
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="agmaEntityId">AGMA Entity ID (Optional)</Label>
+                            <Input
+                                id="agmaEntityId"
+                                value={agmaEntityId}
+                                onChange={(e) => setAgmaEntityId(e.target.value)}
+                                placeholder="AGMA Entity ID"
                                 disabled={isCreatingClient}
                             />
                         </div>

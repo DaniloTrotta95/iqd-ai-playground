@@ -12,12 +12,14 @@ export const createClient = async ({
 	publisherId,
 	name,
 	url,
+	agmaEntityId,
 	topicIds,
 	clientType = 'display',
 }: {
 	publisherId: string;
 	name: string;
 	url?: string;
+	agmaEntityId?: string;
 	topicIds: string[];
 	clientType?: 'display' | 'newsletter' | 'podcast';
 }) => {
@@ -31,7 +33,7 @@ export const createClient = async ({
 			throw new Error("Unauthorized");
 		}
 
-		console.log(publisherId, name, url, topicIds, clientType);
+		console.log(publisherId, name, url, topicIds, clientType, agmaEntityId);
 
 		// Create the client
 		const [newClient] = await db
@@ -40,6 +42,7 @@ export const createClient = async ({
 				publisherId,
 				name,
 				url: url || null,
+				agmaEntityId: agmaEntityId || null,
 				clientType,
 				createdAt: new Date(),
 				updatedAt: new Date(),
@@ -87,6 +90,7 @@ export const getAllClients = async () => {
 				id: client.id,
 				name: client.name,
 				url: client.url,
+				agmaEntityId: client.agmaEntityId,
 				clientType: client.clientType,
 				createdAt: client.createdAt,
 				updatedAt: client.updatedAt,
@@ -104,9 +108,6 @@ export const getAllClients = async () => {
 
 		// Group the results by client to handle multiple topics per client
 		const clientsMap = new Map();
-
-		console.log(clientsWithPublishersAndTopics)
-		console.log(clientsMap)
 		
 		clientsWithPublishersAndTopics.forEach((row) => {
 			const clientId = row.id;
@@ -117,6 +118,7 @@ export const getAllClients = async () => {
 					id: row.id,
 					name: row.name,
 					url: row.url,
+					agmaEntityId: row.agmaEntityId,
 					clientType: row.clientType,
 					createdAt: row.createdAt,
 					updatedAt: row.updatedAt,
@@ -145,7 +147,6 @@ export const getAllClients = async () => {
 		// Convert map to array
 		const clients = Array.from(clientsMap.values());
 
-		console.log(clients)
 
 		return {
 			success: true,
@@ -193,12 +194,14 @@ export const updateClient = async ({
 	id,
 	name,
 	url,
+	agmaEntityId,
 	topicIds,
 	clientType,
 }: {
 	id: string;
 	name: string;
 	url?: string;
+	agmaEntityId?: string;
 	topicIds: string[];
 	clientType?: 'display' | 'newsletter' | 'podcast';
 }) => {
@@ -218,6 +221,7 @@ export const updateClient = async ({
 		await db.update(client).set({
 			name,
 			url,
+			agmaEntityId,
 			clientType,
 			updatedAt: new Date(),
 		}).where(eq(client.id, id));

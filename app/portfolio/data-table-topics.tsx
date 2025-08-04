@@ -78,7 +78,6 @@ export function DataTableTopics<TData, TValue>({
     onColumnFiltersChange: setColumnFilters,
   })
 
-  console.log('data', data)
 
   return (
     <>

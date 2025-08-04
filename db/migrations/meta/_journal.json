@@ -64,6 +64,13 @@
       "when": 1753167999213,
       "tag": "0008_cloudy_hercules",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1753184977474,
+      "tag": "0009_thin_exiles",
+      "breakpoints": true
     }
   ]
 }

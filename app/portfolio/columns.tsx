@@ -91,6 +91,13 @@ export const createColumns = ({ onClientUpdated }: ColumnsProps): ColumnDef<Clie
         },
     },
     {
+      accessorKey: "agmaEntityId",
+      header: "AGMA Entity ID",
+      cell: ({ row }) => {
+        return <span className="text-muted-foreground text-sm">{row.original.agmaEntityId || "-"}</span>
+      },
+    },
+    {
       accessorKey: "url",
       header: "Link",
       cell: ({ row }) => {
