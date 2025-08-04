@@ -76,7 +76,6 @@ export default function AuthForm() {
     startTransition(async () => {
       try {
         if (isSignUp) {
-          console.log(values);
 
           const { email, password, name } = values as z.infer<typeof signUpSchema>;
 

@@ -1,0 +1,1 @@
+ALTER TYPE "public"."topic" ADD VALUE 'travel';

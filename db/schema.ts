@@ -1,4 +1,9 @@
-import { boolean, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { InferInsertModel, InferSelectModel, sql } from "drizzle-orm";
+import { boolean, pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+
+export const topicEnum = pgEnum('topic', ['news', 'business', 'finance', 'sport', 'lifestyle', 'science', 'family', 'travel']);
+export const clientTypeEnum = pgEnum('client_type', ['display', 'newsletter', 'podcast']);
+
 
 export const user = pgTable("user", {
 	id: text("id").primaryKey(),
@@ -50,9 +55,53 @@ export const verification = pgTable("verification", {
 	updatedAt: timestamp("updated_at"),
 });
 
+export const publisher = pgTable("publisher", {
+	id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+	name: text("name").notNull(),
+	createdAt: timestamp("created_at").notNull(),
+	updatedAt: timestamp("updated_at").notNull(),
+});
+
+export const client = pgTable("client", {
+	id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+	publisherId: text("publisher_id")
+		.notNull()
+		.references(() => publisher.id, { onDelete: "cascade" }),
+	name: text("name").notNull(),
+	url: text("url"),
+	agmaEntityId: text("agma_entity_id"),
+	clientType: clientTypeEnum("client_type").notNull().default('display'),
+	createdAt: timestamp("created_at").notNull(),
+	updatedAt: timestamp("updated_at").notNull(),
+});
+
+export const topics = pgTable("topics", {
+	id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+	name: text("name").notNull(),
+	label: text("label").notNull(),
+	createdAt: timestamp("created_at").notNull(),
+	updatedAt: timestamp("updated_at").notNull(),
+});
+
+export const clientTopics = pgTable("client_topics", {
+	id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+	clientId: text("client_id")
+		.notNull()
+		.references(() => client.id, { onDelete: "cascade" }),
+	topicId: text("topic_id")
+		.notNull()
+		.references(() => topics.id, { onDelete: "cascade" }),
+	createdAt: timestamp("created_at").notNull(),
+	updatedAt: timestamp("updated_at").notNull(),
+});
+
 export const schema = {
 	user,
 	session,
 	account,
 	verification,
+	publisher,
+	client,
+	topics,
+	clientTopics,
 };
