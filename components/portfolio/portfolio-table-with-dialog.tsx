@@ -2,7 +2,7 @@
 
 import { DataTable } from '@/app/portfolio/data-table'
 import { createColumns } from '@/app/portfolio/columns'
-import { Topic, ClientWithPublisher, Publisher } from '@/db/types'
+import { Topic, ClientWithPublisher, Publisher, PublisherWithClients } from '@/db/types'
 import AddClientDialog from './add-client-dialog'
 import { useState, useEffect } from 'react'
 import { getAllClients } from '@/actions/client.actions'
@@ -17,7 +17,7 @@ import AddClientTopic from './add-client-topic'
 
 interface PortfolioTableWithDialogProps {
   initialData: ClientWithPublisher[]
-  initialPublishers: Publisher[]
+  initialPublishers: PublisherWithClients[]
   initialTopics: Topic[]
 }
 
@@ -27,8 +27,9 @@ export default function PortfolioTableWithDialog({
   initialTopics,
 }: PortfolioTableWithDialogProps) {
   const [data, setData] = useState<ClientWithPublisher[]>(initialData)
-  const [publishers, setPublishers] = useState<Publisher[]>(initialPublishers)
+  const [publishers, setPublishers] = useState<PublisherWithClients[]>(initialPublishers)
   const [topics, setTopics] = useState<Topic[]>(initialTopics)
+  // const [publishersWithClients, setPublishersWithClients] = useState<PublisherWithClient[]>(initialPublishersWithClients)
   const [isRefreshing, setIsRefreshing] = useState(false)
 
   const refreshData = async () => {
@@ -37,6 +38,7 @@ export default function PortfolioTableWithDialog({
       const result = await getAllClients()
       const resultPublishers = await getPublishers()
       const resultTopics = await getTopics()
+
       if (result.success && result.data) {
         setData(result.data)
       }

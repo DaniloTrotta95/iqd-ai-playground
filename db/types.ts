@@ -28,3 +28,7 @@ export type ClientWithPublisher = {
 		label: string;
 	}>;
 };
+
+export type PublisherWithClients = Publisher & {
+	clients: Client[];
+};

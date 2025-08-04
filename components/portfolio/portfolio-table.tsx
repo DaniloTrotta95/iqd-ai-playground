@@ -1,10 +1,10 @@
-import { Topic, ClientWithPublisher, Publisher } from "@/db/types";
+import { Topic, ClientWithPublisher, Publisher, PublisherWithClients } from "@/db/types";
 import { getAllClients } from "@/actions/client.actions";
 import PortfolioTableWithDialog from "./portfolio-table-with-dialog";
 import { getPublishers } from "@/actions/publisher.actions";
 import { getTopics } from "@/actions/topic.actions";
 
-async function getData(): Promise<{ clients: ClientWithPublisher[], publishers: Publisher[], topics: Topic[] }> {
+async function getData(): Promise<{ clients: ClientWithPublisher[], publishers: PublisherWithClients[], topics: Topic[] }> {
     const result = await getAllClients();
     const publishers = await getPublishers()
     const topics = await getTopics()

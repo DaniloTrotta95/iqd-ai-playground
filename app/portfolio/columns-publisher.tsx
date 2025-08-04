@@ -3,9 +3,9 @@
 import { Badge } from "@/components/ui/badge"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { ClientWithPublisher, Publisher } from "@/db/types"
+import { ClientWithPublisher, Publisher, PublisherWithClients } from "@/db/types"
 import { ColumnDef } from "@tanstack/react-table"
-import { ArrowDown, ArrowRight, ArrowUp, ArrowUpDown, Copy, ExternalLink, LinkIcon, MoreHorizontal, Pencil, Trash } from "lucide-react"
+import { ArrowDown, ArrowRight, ArrowUp, ArrowUpDown, ChevronDown, ChevronRight, Copy, ExternalLink, LinkIcon, MoreHorizontal, Pencil, Trash } from "lucide-react"
 import Link from "next/link"
 import { useState } from "react";
 import EditClientDialog from "@/components/portfolio/edit-client-dialog"
@@ -18,7 +18,27 @@ interface ColumnsPublisherProps {
   onPublisherUpdated: () => void;
 }
 
-export const createColumnsPublisher = ({ onPublisherUpdated }: ColumnsPublisherProps): ColumnDef<Publisher>[] => [
+export const createColumnsPublisher = ({ onPublisherUpdated }: ColumnsPublisherProps): ColumnDef<PublisherWithClients>[] => [
+  {
+    id: "expander",
+    header: () => null,
+    cell: ({ row }) => {
+      return row.getCanExpand() ? (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={row.getToggleExpandedHandler()}
+          className="h-8 w-8 p-0"
+        >
+          {row.getIsExpanded() ? (
+            <ChevronDown className="h-4 w-4" />
+          ) : (
+            <ChevronRight className="h-4 w-4" />
+          )}
+        </Button>
+      ) : null
+    },
+  },
   {
     accessorKey: "name",
     cell: ({ row }) => {
@@ -42,7 +62,7 @@ export const createColumnsPublisher = ({ onPublisherUpdated }: ColumnsPublisherP
     {
       id: "actions",
       cell: ({ row }) => {
-        const client = row.original
+        const publisher = row.original
         const [showEditDialog, setShowEditDialog] = useState(false);
         const [showDeleteDialog, setShowDeleteDialog] = useState(false);
    
@@ -59,7 +79,7 @@ export const createColumnsPublisher = ({ onPublisherUpdated }: ColumnsPublisherP
                 <DropdownMenuLabel>Aktionen</DropdownMenuLabel>
                 <DropdownMenuItem
                   className="justify-between"
-                  onClick={() => navigator.clipboard.writeText(client.name)}
+                  onClick={() => navigator.clipboard.writeText(publisher.name)}
                 >
                    Name kopieren
                    <Copy className="w-4 h-4 ml-2" />
