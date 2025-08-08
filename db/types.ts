@@ -1,5 +1,5 @@
 import { InferInsertModel, InferSelectModel } from "drizzle-orm"
-import { client, clientTopics, publisher, topics } from "./schema"
+import { client, clientTopics, products, productTechSpecs, productUsageContexts, productFormats, publisher, topics } from "./schema"
 
 export type  Publisher = InferSelectModel<typeof publisher>
 export type  Client = InferSelectModel<typeof client>
@@ -28,3 +28,17 @@ export type ClientWithPublisher = {
 		label: string;
 	}>;
 };
+
+export type PublisherWithClients = Publisher & {
+	clients: Client[];
+};
+
+  // Types for TypeScript inference
+  export type Product = typeof products.$inferSelect;
+  export type NewProduct = typeof products.$inferInsert;
+  export type ProductUsageContext = typeof productUsageContexts.$inferSelect;
+  export type ProductTechSpec = typeof productTechSpecs.$inferSelect;
+  export type ProductFormat = typeof productFormats.$inferSelect;
+  
+  // Import the ProductWithSpecs type from techspec actions
+  export type { ProductWithSpecs } from "@/actions/techspec.actions";

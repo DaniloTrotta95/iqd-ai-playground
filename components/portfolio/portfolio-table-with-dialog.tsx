@@ -2,7 +2,7 @@
 
 import { DataTable } from '@/app/portfolio/data-table'
 import { createColumns } from '@/app/portfolio/columns'
-import { Topic, ClientWithPublisher, Publisher } from '@/db/types'
+import { Topic, ClientWithPublisher, Publisher, PublisherWithClients } from '@/db/types'
 import AddClientDialog from './add-client-dialog'
 import { useState, useEffect } from 'react'
 import { getAllClients } from '@/actions/client.actions'
@@ -14,10 +14,11 @@ import { getTopics } from '@/actions/topic.actions'
 import { DataTableTopics } from '@/app/portfolio/data-table-topics'
 import { createColumnsTopics } from '@/app/portfolio/columns-topics'
 import AddClientTopic from './add-client-topic'
+import { useSession } from '@/lib/auth-client'
 
 interface PortfolioTableWithDialogProps {
   initialData: ClientWithPublisher[]
-  initialPublishers: Publisher[]
+  initialPublishers: PublisherWithClients[]
   initialTopics: Topic[]
 }
 
@@ -27,9 +28,14 @@ export default function PortfolioTableWithDialog({
   initialTopics,
 }: PortfolioTableWithDialogProps) {
   const [data, setData] = useState<ClientWithPublisher[]>(initialData)
-  const [publishers, setPublishers] = useState<Publisher[]>(initialPublishers)
+  const [publishers, setPublishers] = useState<PublisherWithClients[]>(initialPublishers)
   const [topics, setTopics] = useState<Topic[]>(initialTopics)
+  // const [publishersWithClients, setPublishersWithClients] = useState<PublisherWithClient[]>(initialPublishersWithClients)
   const [isRefreshing, setIsRefreshing] = useState(false)
+
+  const { data: session } = useSession();
+
+  const isAdmin = (session?.user as any)?.role === 'admin';
 
   const refreshData = async () => {
     setIsRefreshing(true)
@@ -37,6 +43,7 @@ export default function PortfolioTableWithDialog({
       const result = await getAllClients()
       const resultPublishers = await getPublishers()
       const resultTopics = await getTopics()
+
       if (result.success && result.data) {
         setData(result.data)
       }
@@ -68,9 +75,11 @@ export default function PortfolioTableWithDialog({
           </TabsList>
           <TabsContent value="clients">
             <div className="flex flex-col gap-4 w-full">
+            {isAdmin && (
               <div className="flex justify-end w-full">
                 <AddClientDialog onClientAdded={handleClientAdded} className="w-fit" />
               </div>
+            )}
               <DataTable
                 columns={createColumns({ onClientUpdated: handleClientAdded })}
                 data={data}
@@ -88,9 +97,11 @@ export default function PortfolioTableWithDialog({
           </TabsContent>
           <TabsContent value="topics">
           <div className="flex flex-col gap-4 w-full">
+            {isAdmin && (
               <div className="flex justify-end w-full">
                 <AddClientTopic onTopicAdded={handleClientAdded} className="w-fit" />
               </div>
+            )}
             <DataTableTopics
               columns={createColumnsTopics({ onTopicUpdated: handleClientAdded })}
               data={topics}

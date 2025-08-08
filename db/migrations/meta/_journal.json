@@ -71,6 +71,34 @@
       "when": 1753184977474,
       "tag": "0009_thin_exiles",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1754566510465,
+      "tag": "0010_keen_tempest",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1754571666965,
+      "tag": "0011_dear_madame_hydra",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1754574794860,
+      "tag": "0012_watery_aaron_stack",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1754577184300,
+      "tag": "0013_dusty_sentinels",
+      "breakpoints": true
     }
   ]
 }

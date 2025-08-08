@@ -1,10 +1,11 @@
 "use server";
 
 import { db } from "@/db/drizzle";
-import { publisher } from "@/db/schema";
+import { client, publisher } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
+import { eq } from "drizzle-orm";
 
 export const createPublisher = async ({
 	name,
@@ -49,6 +50,7 @@ export const createPublisher = async ({
 
 export const getPublishers = async () => {
 	try {
+		console.log('getPublishers')
 		// Get the current user session
 		const session = await auth.api.getSession({
 			headers: await headers(),
@@ -60,13 +62,52 @@ export const getPublishers = async () => {
 
 		// Get all publishers
 		const publishers = await db
-			.select()
+			.select({
+				publisher: {
+					id: publisher.id,
+					name: publisher.name,
+					createdAt: publisher.createdAt,
+					updatedAt: publisher.updatedAt,
+				},
+				client: {
+					id: client.id,
+					name: client.name,
+					url: client.url,
+					agmaEntityId: client.agmaEntityId,
+					clientType: client.clientType,
+					createdAt: client.createdAt,
+					updatedAt: client.updatedAt,
+				},
+			})
 			.from(publisher)
+			.leftJoin(client, eq(publisher.id, client.publisherId))
 			.orderBy(publisher.name);
+
+
+		const groupedPublishers = publishers.reduce((acc, row) => {
+			const publisherId = row.publisher.id;
+			
+			if (!acc[publisherId]) {
+				acc[publisherId] = {
+					...row.publisher,
+					clients: [],
+				};
+			}
+			
+			// Only add client if it exists (not null from left join)
+			if (row.client && row.client.id) {
+				acc[publisherId].clients.push(row.client);
+			}
+			
+			return acc;
+		}, {} as Record<string, any>);
+
+		const result = Object.values(groupedPublishers);
+
 
 		return {
 			success: true,
-			data: publishers,
+			data: result,
 		};
 	} catch (error) {
 		console.error("Error fetching publishers:", error);
@@ -76,6 +117,7 @@ export const getPublishers = async () => {
 		};
 	}
 };
+
 
 
 

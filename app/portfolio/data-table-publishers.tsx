@@ -3,9 +3,11 @@
 import {
   ColumnDef,
   ColumnFiltersState,
+  ExpandedState,
   FilterFn,
   flexRender,
   getCoreRowModel,
+  getExpandedRowModel,
   getFilteredRowModel,
   getSortedRowModel,
   SortingState,
@@ -25,12 +27,14 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { rankItem } from '@tanstack/match-sorter-utils';
 import MultipleSelector from "@/components/ui/multi-select"
+import { PublisherWithClients, Client } from "@/db/types"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { ExternalLink, MoreHorizontal } from "lucide-react"
 
-
-
-interface DataTableProps<TData, TValue> {
-  columns: ColumnDef<TData, TValue>[]
-  data: TData[]
+interface DataTableProps {
+  columns: ColumnDef<PublisherWithClients, any>[]
+  data: PublisherWithClients[]
   onClientUpdated?: () => void;
 }
 
@@ -45,15 +49,15 @@ const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
   return itemRank.passed
 }
 
-export function DataTablePublishers<TData, TValue>({
+export function DataTablePublishers({
   columns,
   data,
-}: DataTableProps<TData, TValue>) {
+}: DataTableProps) {
 
   const [sorting, setSorting] = useState<SortingState>([])
-  const [globalFilter, setGlobalFilter] = useState<any>(
-    []
-  )
+  const [globalFilter, setGlobalFilter] = useState<any>([])
+  const [expanded, setExpanded] = useState<ExpandedState>({})
+
   const table = useReactTable({
     data,
     columns,
@@ -62,6 +66,8 @@ export function DataTablePublishers<TData, TValue>({
     },
     // @ts-ignore
     globalFilterFn: "fuzzy",
+    getRowCanExpand: (row) => row.original.clients.length > 0,
+    getExpandedRowModel: getExpandedRowModel(),
     getCoreRowModel: getCoreRowModel(),
     onSortingChange: setSorting,
     getSortedRowModel: getSortedRowModel(),
@@ -70,11 +76,13 @@ export function DataTablePublishers<TData, TValue>({
     state: {
       sorting,
       globalFilter,
+      expanded,
     },
     onGlobalFilterChange: setGlobalFilter,
+    onExpandedChange: setExpanded,
   })
 
-
+  console.log('data', data)
 
   return (
     <>
@@ -92,7 +100,6 @@ export function DataTablePublishers<TData, TValue>({
         />
       </div>
     </div>
-
 
     <div className="rounded-md border p-4 bg-white w-full">
       <Table >
@@ -117,16 +124,54 @@ export function DataTablePublishers<TData, TValue>({
         <TableBody>
           {table.getRowModel().rows?.length ? (
             table.getRowModel().rows.map((row) => (
-              <TableRow
-                key={row.id}
-                data-state={row.getIsSelected() && "selected"}
-              >
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </TableCell>
+              <>
+                <TableRow
+                  key={row.id}
+                  data-state={row.getIsSelected() && "selected"}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id}>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableCell>
+                  ))}
+                </TableRow>
+                {row.getIsExpanded() && row.original.clients.map((client: Client) => (
+                  <TableRow key={`${row.id}-client-${client.id}`} className="bg-gray-50/50 ">
+                    <TableCell colSpan={3}>
+                      <div className="flex items-center gap-6 pl-12">
+                        <div className="flex items-center gap-2 min-w-[200px]">
+                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                          <Badge variant="secondary" className="font-medium">
+                            {client.name}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-2 min-w-[120px]">
+                          <Badge variant="outline">{client.clientType}</Badge>
+                        </div>
+                        <div className="flex items-center gap-2 min-w-[200px]">
+                          {client.agmaEntityId && (
+                            <span className="text-sm font-mono text-gray-700">
+                              {client.agmaEntityId}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 ml-auto">
+                          {client.url && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                              onClick={() => window.open(client.url!, '_blank')}
+                            >
+                              <ExternalLink className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </TableRow>
+              </>
             ))
           ) : (
             <TableRow>
