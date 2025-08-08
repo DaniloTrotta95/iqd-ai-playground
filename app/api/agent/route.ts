@@ -123,7 +123,7 @@ const searchOpportunitiesInSalesForce = async ({
     })
 
 const TEST_ANFRAGE = `
-Email von:  daniel.maffei@phdmedia.de
+Email von:  Alessandra.maffei@phdmedia.de
 
 Hi Laureen,
 
