@@ -112,6 +112,12 @@ export const updateProduct = async (data: UpdateProductData) => {
       throw new Error("Unauthorized");
     }
 
+    // Enforce admin-only access
+    const userRole = (session.user as any)?.role;
+    if (userRole !== 'admin') {
+      throw new Error("Forbidden");
+    }
+
     // Update base product
     const [updated] = await db
       .update(products)
@@ -160,6 +166,12 @@ export const deleteProduct = async (productId: number) => {
 
     if (!session || !session.user) {
       throw new Error("Unauthorized");
+    }
+
+    // Enforce admin-only access
+    const userRole = (session.user as any)?.role;
+    if (userRole !== 'admin') {
+      throw new Error("Forbidden");
     }
 
     // Delete child records first (no ON DELETE CASCADE defined)

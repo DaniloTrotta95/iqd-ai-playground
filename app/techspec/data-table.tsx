@@ -246,13 +246,8 @@ export function DataTable<TData, TValue>({
   return (
     <>
       <div className="flex items-end gap-4">
-        <div className="flex justify-center gap-2 py-4 flex-col">
-          <div className="flex justify-center gap-2 py-4 flex-col w-full">
-            {/* Placeholder for future controls */}
-          </div>
-        </div>
-        <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200 w-full">
-          <div className="flex items-center justify-between mb-2">
+        <div className="py-2 px-4 bg-gray-50 rounded-lg border border-gray-200 w-full">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Filter className="w-4 h-4 text-gray-500" />
               <h3 className="text-sm font-medium text-gray-900">Filter</h3>

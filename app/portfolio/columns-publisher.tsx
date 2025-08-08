@@ -59,78 +59,78 @@ export const createColumnsPublisher = ({ onPublisherUpdated }: ColumnsPublisherP
       </Button>
     },
   },
-    {
-      id: "actions",
-      cell: ({ row }) => {
-        const publisher = row.original
-        const [showEditDialog, setShowEditDialog] = useState(false);
-        const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+    // {
+    //   id: "actions",
+    //   cell: ({ row }) => {
+    //     const publisher = row.original
+    //     const [showEditDialog, setShowEditDialog] = useState(false);
+    //     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
    
-        return (
-          <>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-8 w-8 p-0">
-                  <span className="sr-only">Menü öffnen</span>
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="space-y-1" align="end">
-                <DropdownMenuLabel>Aktionen</DropdownMenuLabel>
-                <DropdownMenuItem
-                  className="justify-between"
-                  onClick={() => navigator.clipboard.writeText(publisher.name)}
-                >
-                   Name kopieren
-                   <Copy className="w-4 h-4 ml-2" />
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  className="justify-between"
-                  onClick={() => setShowEditDialog(true)}
-                >
-                  Bearbeiten
-                  <Pencil className="w-4 h-4 ml-2" />
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  className="text-red-500 group bg-red-100 font-semibold group-hover:bg-red-50 justify-between"
-                  onClick={() => setShowDeleteDialog(true)}
-                >
-                  <span className="group-hover:text-red-500">
-                  Löschen
-                  </span>
-                  <Trash className="w-4 h-4 ml-2 text-red-500 hover:text-red-500" />  
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            {showEditDialog && (
-              // <EditClientDialog 
-              //   client={client} 
-              //   onClientUpdated={() => {
-              //     onPublisherUpdated();
-              //     setShowEditDialog(false);
-              //   }}
-              //   open={showEditDialog}
-              //   onOpenChange={setShowEditDialog}
-              // />
-              <></>
-            )}
-            {showDeleteDialog && (
-              // <DeleteClientDialog 
-              //   client={client} 
-              //   onClientDeleted={() => {
-              //     onPublisherUpdated();
-              //     setShowDeleteDialog(false);
-              //   }}
-              //   open={showDeleteDialog}
-              //   onOpenChange={setShowDeleteDialog}
-              // />
-              <></>
-            )}
-          </>
-        )
-      },
-    },
+    //     return (
+    //       <>
+    //         <DropdownMenu>
+    //           <DropdownMenuTrigger asChild>
+    //             <Button variant="ghost" className="h-8 w-8 p-0">
+    //               <span className="sr-only">Menü öffnen</span>
+    //               <MoreHorizontal className="h-4 w-4" />
+    //             </Button>
+    //           </DropdownMenuTrigger>
+    //           <DropdownMenuContent className="space-y-1" align="end">
+    //             <DropdownMenuLabel>Aktionen</DropdownMenuLabel>
+    //             <DropdownMenuItem
+    //               className="justify-between"
+    //               onClick={() => navigator.clipboard.writeText(publisher.name)}
+    //             >
+    //                Name kopieren
+    //                <Copy className="w-4 h-4 ml-2" />
+    //             </DropdownMenuItem>
+    //             <DropdownMenuSeparator />
+    //             <DropdownMenuItem
+    //               className="justify-between"
+    //               onClick={() => setShowEditDialog(true)}
+    //             >
+    //               Bearbeiten
+    //               <Pencil className="w-4 h-4 ml-2" />
+    //             </DropdownMenuItem>
+    //             <DropdownMenuItem
+    //               className="text-red-500 group bg-red-100 font-semibold group-hover:bg-red-50 justify-between"
+    //               onClick={() => setShowDeleteDialog(true)}
+    //             >
+    //               <span className="group-hover:text-red-500">
+    //               Löschen
+    //               </span>
+    //               <Trash className="w-4 h-4 ml-2 text-red-500 hover:text-red-500" />  
+    //             </DropdownMenuItem>
+    //           </DropdownMenuContent>
+    //         </DropdownMenu>
+    //         {showEditDialog && (
+    //           // <EditClientDialog 
+    //           //   client={client} 
+    //           //   onClientUpdated={() => {
+    //           //     onPublisherUpdated();
+    //           //     setShowEditDialog(false);
+    //           //   }}
+    //           //   open={showEditDialog}
+    //           //   onOpenChange={setShowEditDialog}
+    //           // />
+    //           <></>
+    //         )}
+    //         {showDeleteDialog && (
+    //           // <DeleteClientDialog 
+    //           //   client={client} 
+    //           //   onClientDeleted={() => {
+    //           //     onPublisherUpdated();
+    //           //     setShowDeleteDialog(false);
+    //           //   }}
+    //           //   open={showDeleteDialog}
+    //           //   onOpenChange={setShowDeleteDialog}
+    //           // />
+    //           <></>
+    //         )}
+    //       </>
+    //     )
+    //   },
+    // },
 //   {
 //     accessorKey: "createdAt",
 //     header: "Created At",

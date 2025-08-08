@@ -10,9 +10,84 @@ import Link from "next/link"
 import { useState } from "react";
 import EditTechSpecDialog from "@/components/techspecs/edit-techspec-dialog";
 import DeleteTechSpecDialog from "@/components/techspecs/delete-techspec-dialog";
+import { useSession } from "@/lib/auth-client";
 
 interface ColumnsProps {
   onTechSpecUpdated: () => void;
+}
+
+interface ActionsCellProps {
+  product: ProductWithSpecs;
+  onTechSpecUpdated: () => void;
+}
+
+function ActionsCell({ product, onTechSpecUpdated }: ActionsCellProps) {
+  const { data: session } = useSession();
+  const isAdmin = (session?.user as any)?.role === 'admin';
+
+  // Always call hooks in the same order, regardless of role
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
+  if (!isAdmin) return null;
+
+  return (
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <span className="sr-only">Open menu</span>
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="space-y-1" align="end">
+          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+          <DropdownMenuItem
+            className="justify-between"
+            onClick={() => navigator.clipboard.writeText(product.name)}
+          >
+             Copy Name
+            <Copy className="w-4 h-4 ml-2" />
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            className="justify-between"
+            onClick={() => setShowEditDialog(true)}
+          >
+            Edit
+            <Pencil className="w-4 h-4 ml-2" />
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            className="text-red-500 group bg-red-100 font-semibold justify-between"
+            onClick={() => setShowDeleteDialog(true)}
+          >
+            <span className="group-hover:text-red-500">
+            Delete
+            </span>
+            <Trash className="w-4 h-4 ml-2 text-red-500 hover:text-red-500" />  
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <EditTechSpecDialog
+        product={product}
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
+        onProductUpdated={() => {
+          onTechSpecUpdated();
+          setShowEditDialog(false);
+        }}
+      />
+      <DeleteTechSpecDialog
+        product={product}
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        onProductDeleted={() => {
+          onTechSpecUpdated();
+          setShowDeleteDialog(false);
+        }}
+      />
+    </>
+  );
 }
 
 
@@ -41,6 +116,8 @@ const getKategorieColor = (kategorie: string) => {
       return 'bg-gray-100 text-gray-800 border-gray-200'
   }
 }
+
+
 
 export const createColumnsTechSpec = ({ onTechSpecUpdated }: ColumnsProps): ColumnDef<ProductWithSpecs>[] => [
   {
@@ -164,54 +241,6 @@ export const createColumnsTechSpec = ({ onTechSpecUpdated }: ColumnsProps): Colu
       return <span className="text-sm font-mono">{weight.toFixed(2)} KB</span>
     },
   },
-
-  // {
-  //   accessorKey: "techSpecs",
-  //   header: "Tech Specs",
-  //   cell: ({ row }) => {
-  //     const specs = row.original.techSpecs
-  //     if (!specs || specs.length === 0) {
-  //       return <span className="text-muted-foreground text-sm">-</span>
-  //     }
-      
-  //     return (
-  //       <div className="space-y-1">
-  //         {specs.slice(0, 2).map((spec) => (
-  //           <div key={spec.id} className="text-xs">
-  //             <span className="font-medium">{spec.specName}</span>
-  //             <span className="mx-1">=</span>
-  //             <span>{spec.specValue}</span>
-  //             {spec.specType && (
-  //               <span className="ml-1 text-gray-500">({spec.specType})</span>
-  //             )}
-  //           </div>
-  //         ))}
-  //         {specs.length > 2 && (
-  //           <div className="text-xs text-muted-foreground">
-  //             +{specs.length - 2} more
-  //           </div>
-  //         )}
-  //       </div>
-  //     )
-  //   },
-  // // },
-  // {
-  //   accessorKey: "description",
-  //   header: "Beschreibung",
-  //   cell: ({ row }) => {
-  //     const description = row.original.description
-  //     if (!description) {
-  //       return <span className="text-muted-foreground text-sm">-</span>
-  //     }
-  //     return (
-  //       <div className="max-w-[200px]">
-  //         <span className="text-sm text-muted-foreground line-clamp-2">
-  //           {description}
-  //         </span>
-  //       </div>
-  //     )
-  //   },
-  // },
   {
     accessorKey: "url",
     header: "URL",
@@ -230,71 +259,12 @@ export const createColumnsTechSpec = ({ onTechSpecUpdated }: ColumnsProps): Colu
       ) : (
         <span className="text-gray-400">—</span>
       )}
-    },
+  },
   {
     id: "actions",
     cell: ({ row }) => {
-      const product = row.original
-      const [showEditDialog, setShowEditDialog] = useState(false);
-      const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-   
-      return (
-        <>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="space-y-1" align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem
-                className="justify-between"
-                onClick={() => navigator.clipboard.writeText(product.name)}
-              >
-                 Copy Name
-                <Copy className="w-4 h-4 ml-2" />
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="justify-between"
-                onClick={() => setShowEditDialog(true)}
-              >
-                Edit
-                <Pencil className="w-4 h-4 ml-2" />
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="text-red-500 group bg-red-100 font-semibold justify-between"
-                onClick={() => setShowDeleteDialog(true)}
-              >
-                <span className="group-hover:text-red-500">
-                Delete
-                </span>
-                <Trash className="w-4 h-4 ml-2 text-red-500 hover:text-red-500" />  
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <EditTechSpecDialog
-            product={product}
-            open={showEditDialog}
-            onOpenChange={setShowEditDialog}
-            onProductUpdated={() => {
-              onTechSpecUpdated();
-              setShowEditDialog(false);
-            }}
-          />
-          <DeleteTechSpecDialog
-            product={product}
-            open={showDeleteDialog}
-            onOpenChange={setShowDeleteDialog}
-            onProductDeleted={() => {
-              onTechSpecUpdated();
-              setShowDeleteDialog(false);
-            }}
-          />
-        </>
-      )
+      const product = row.original;
+      return <ActionsCell product={product} onTechSpecUpdated={onTechSpecUpdated} />
     },
   },
 ]

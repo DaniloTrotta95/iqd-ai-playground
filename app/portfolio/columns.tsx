@@ -10,12 +10,87 @@ import Link from "next/link"
 import { useState } from "react";
 import EditClientDialog from "@/components/portfolio/edit-client-dialog"
 import DeleteClientDialog from "@/components/portfolio/delete-client-dialog"
+import { useSession } from "@/lib/auth-client"
 
 // This type is used to define the shape of our data.
 // You can use a Zod schema here if you want.
 
 interface ColumnsProps {
   onClientUpdated: () => void;
+}
+
+interface ActionsCellProps {
+  client: ClientWithPublisher;
+  onClientUpdated: () => void;
+}
+
+function ActionsCell({ client, onClientUpdated }: ActionsCellProps) {
+  const { data: session } = useSession();
+  const isAdmin = (session?.user as any)?.role === 'admin';
+
+  // Always call hooks in the same order
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
+  if (!isAdmin) return null;
+
+  return (
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <span className="sr-only">Menü öffnen</span>
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="space-y-1" align="end">
+          <DropdownMenuLabel>Aktionen</DropdownMenuLabel>
+          <DropdownMenuItem
+            className="justify-between"
+            onClick={() => navigator.clipboard.writeText(client.name)}
+          >
+             Name kopieren
+             <Copy className="w-4 h-4 ml-2" />
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            className="justify-between"
+            onClick={() => setShowEditDialog(true)}
+          >
+            Bearbeiten
+            <Pencil className="w-4 h-4 ml-2" />
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            className="text-red-500 group bg-red-100 font-semibold group-hover:bg-red-50 justify-between"
+            onClick={() => setShowDeleteDialog(true)}
+          >
+            <span className="group-hover:text-red-500">
+            Löschen
+            </span>
+            <Trash className="w-4 h-4 ml-2 text-red-500 hover:text-red-500" />  
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <EditClientDialog 
+        client={client} 
+        onClientUpdated={() => {
+          onClientUpdated();
+          setShowEditDialog(false);
+        }}
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
+      />
+      <DeleteClientDialog 
+        client={client} 
+        onClientDeleted={() => {
+          onClientUpdated();
+          setShowDeleteDialog(false);
+        }}
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+      />
+    </>
+  );
 }
 
 export const createColumns = ({ onClientUpdated }: ColumnsProps): ColumnDef<ClientWithPublisher>[] => [
@@ -126,74 +201,11 @@ export const createColumns = ({ onClientUpdated }: ColumnsProps): ColumnDef<Clie
       id: "actions",
       cell: ({ row }) => {
         const client = row.original
-        const [showEditDialog, setShowEditDialog] = useState(false);
-        const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-   
-        return (
-          <>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-8 w-8 p-0">
-                  <span className="sr-only">Menü öffnen</span>
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="space-y-1" align="end">
-                <DropdownMenuLabel>Aktionen</DropdownMenuLabel>
-                <DropdownMenuItem
-                  className="justify-between"
-                  onClick={() => navigator.clipboard.writeText(client.name)}
-                >
-                   Name kopieren
-                   <Copy className="w-4 h-4 ml-2" />
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  className="justify-between"
-                  onClick={() => setShowEditDialog(true)}
-                >
-                  Bearbeiten
-                  <Pencil className="w-4 h-4 ml-2" />
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  className="text-red-500 group bg-red-100 font-semibold group-hover:bg-red-50 justify-between"
-                  onClick={() => setShowDeleteDialog(true)}
-                >
-                  <span className="group-hover:text-red-500">
-                  Löschen
-                  </span>
-                  <Trash className="w-4 h-4 ml-2 text-red-500 hover:text-red-500" />  
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            {showEditDialog && (
-              <EditClientDialog 
-                client={client} 
-                onClientUpdated={() => {
-                  onClientUpdated();
-                  setShowEditDialog(false);
-                }}
-                open={showEditDialog}
-                onOpenChange={setShowEditDialog}
-              />
-            )}
-            {showDeleteDialog && (
-              <DeleteClientDialog 
-                client={client} 
-                onClientDeleted={() => {
-                  onClientUpdated();
-                  setShowDeleteDialog(false);
-                }}
-                open={showDeleteDialog}
-                onOpenChange={setShowDeleteDialog}
-              />
-            )}
-          </>
-        )
+        return <ActionsCell client={client} onClientUpdated={onClientUpdated} />
       },
     },
-//   {
-//     accessorKey: "createdAt",
-//     header: "Created At",
-//   },
+  //   {
+  //     accessorKey: "createdAt",
+  //     header: "Created At",
+  //   },
 ]
