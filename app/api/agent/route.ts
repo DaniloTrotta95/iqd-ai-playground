@@ -1,6 +1,5 @@
-import { RequestyLLM } from "@/lib/requesty";
 import { createWorkflow, workflowEvent } from "@llamaindex/workflow-core";
-import { agent, agentStreamEvent } from "@llamaindex/workflow";
+import { agent } from "@llamaindex/workflow";
 import { tool } from "llamaindex"
 import { NextResponse } from "next/server";
 import { createStatefulMiddleware } from "@llamaindex/workflow-core/middleware/state";
@@ -190,11 +189,11 @@ export async function GET() {
                 apiKey: process.env.REQUESTY_API_KEY, 
                 model: "google/gemini-2.0-flash-001" 
             })
-            const llm4o = requesty({
-                baseURL: process.env.REQUESTY_BASE_URL, 
-                apiKey: process.env.REQUESTY_API_KEY, 
-                model: "openai/gpt-4o" 
-            })
+            // const llm4o = requesty({
+            //     baseURL: process.env.REQUESTY_BASE_URL, 
+            //     apiKey: process.env.REQUESTY_API_KEY, 
+            //     model: "openai/gpt-4o" 
+            // })
 
             const salesForceAgent = agent({
                 name: "salesForceAgent",
@@ -236,11 +235,11 @@ export async function GET() {
 
 
            
-            const offerEvent = workflowEvent<{
-                offerData: z.infer<typeof offerSchema> | null,
-                agmaResult: string | null,
-                testResult: string | null,
-            }>()
+            // const offerEvent = workflowEvent<{
+            //     offerData: z.infer<typeof offerSchema> | null,
+            //     agmaResult: string | null,
+            //     testResult: string | null,
+            // }>()
 
             const stopEvent = workflowEvent<{
                 result: string | null,
@@ -268,12 +267,12 @@ export async function GET() {
 
         // store the topic in case we need to loop
         state.anfrage = start.data.anfrage
-        let prompt = `Folgende Anfrage erhalten: <anfrage>${start.data.anfrage}</anfrage>. Extrahiere die relevanten Informationen.`
+        const prompt = `Folgende Anfrage erhalten: <anfrage>${start.data.anfrage}</anfrage>. Extrahiere die relevanten Informationen.`
 
 
 
         // get the research
-        let result = await llm.complete({prompt:prompt, responseFormat: offerSchema})
+        const result = await llm.complete({prompt:prompt, responseFormat: offerSchema})
 
         const parsedResult = offerSchema.parse(JSON.parse(result.text))
         // console.log("Result is ", parsedResult)
