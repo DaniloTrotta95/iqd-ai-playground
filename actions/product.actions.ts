@@ -9,34 +9,48 @@ import { and, eq, inArray } from "drizzle-orm";
 
 export interface CreateProductData {
   name: string;
-  productCategory: 'banner' | 'video' | 'audio' | 'interactive' | 'newsletter' | 'social' | 'display' | 'native';
+  productCategory: 'standardwerbeform' | 'sonderwerbeform' | 'kombinationswerbeform' | 'instream' | 'inpage';
   width?: number;
   height?: number;
   weightKb: number;
   ecoAdWeightKb?: number;
-  formats: Array<'jpg' | 'png' | 'gif' | 'webp' | 'svg' | 'mp4' | 'webm' | 'html5_zip' | 'html' | 'css' | 'js'>;
+  formats: Array<'jpg' | 'png' | 'gif' | 'html5' | 'mp4 (H.264)' | '3rd-Party-Redirect' | 'mp3'>;
   description?: string;
-  usageContexts: Array<'mobile' | 'desktop' | 'tablet' | 'stationary' | 'video' | 'newsletter' | 'audio' | 'web' | 'app'>;
+  usageContexts: Array<'display' | 'newsletter' | 'audio' | 'video' | 'app' | 'native'>;
   techSpecs: Array<{
     specName: string;
     specValue: string;
     specType?: string;
   }>;
   url?: string;
+  impressionPixel?: boolean;
+  isEcoAd?: boolean;
+  isSkippable?: boolean;
+  maxDuration?: number;
+  maxHeaderSize?: number;
+  maxTextSize?: number;
+  maxCTASize?: number;
 }
 
 export interface UpdateProductData {
   id: number;
   name: string;
-  productCategory: 'banner' | 'video' | 'audio' | 'interactive' | 'newsletter' | 'social' | 'display' | 'native';
+  productCategory: 'standardwerbeform' | 'sonderwerbeform' | 'kombinationswerbeform' | 'instream' | 'inpage';
   width?: number | null;
   height?: number | null;
   weightKb: number;
   ecoAdWeightKb?: number | null;
-  formats: Array<'jpg' | 'png' | 'gif' | 'webp' | 'svg' | 'mp4' | 'webm' | 'html5_zip' | 'html' | 'css' | 'js'>;
+  formats: Array<'jpg' | 'png' | 'gif' | 'html5' | 'mp4 (H.264)' | '3rd-Party-Redirect' | 'mp3'>;
   description?: string | null;
-  usageContexts: Array<'mobile' | 'desktop' | 'tablet' | 'stationary' | 'video' | 'newsletter' | 'audio' | 'web' | 'app'>;
+  usageContexts: Array<'display' | 'newsletter' | 'audio' | 'video' | 'app' | 'native'>;
   url?: string | null;
+  impressionPixel?: boolean;
+  isEcoAd?: boolean;
+  isSkippable?: boolean;
+  maxDuration?: number | null;
+  maxHeaderSize?: number | null;
+  maxTextSize?: number | null;
+  maxCTASize?: number | null;
 }
 
 export const createProduct = async (data: CreateProductData) => {
@@ -56,11 +70,18 @@ export const createProduct = async (data: CreateProductData) => {
       width: data.width ?? null,
       height: data.height ?? null,
       // decimal columns expect string values
-      weightKb: data.weightKb.toFixed(2),
+      weightKb: data.weightKb != null ? Number(data.weightKb).toFixed(2) : null,
       ecoAdWeightKb: data.ecoAdWeightKb != null ? Number(data.ecoAdWeightKb).toFixed(2) : null,
       description: data.description ?? null,
       url: data.url ?? null,
-    }).returning();
+      impressionPixel: data.impressionPixel ?? false,
+      isEcoAd: data.isEcoAd ?? false,
+      isSkippable: data.isSkippable ?? false,
+      maxDuration: data.maxDuration ?? null,
+      maxHeaderSize: data.maxHeaderSize ?? null,
+      maxTextSize: data.maxTextSize ?? null,
+      maxCTASize: data.maxCTASize ?? null,
+    } as any).returning();
 
     // Create formats
     if (data.formats.length > 0) {
@@ -130,7 +151,14 @@ export const updateProduct = async (data: UpdateProductData) => {
         ecoAdWeightKb: data.ecoAdWeightKb != null ? Number(data.ecoAdWeightKb).toFixed(2) : null,
         description: data.description ?? null,
         url: data.url ?? null,
-      })
+        impressionPixel: data.impressionPixel ?? false,
+        isEcoAd: data.isEcoAd ?? false,
+        isSkippable: data.isSkippable ?? false,
+        maxDuration: data.maxDuration ?? null,
+        maxHeaderSize: data.maxHeaderSize ?? null,
+        maxTextSize: data.maxTextSize ?? null,
+        maxCTASize: data.maxCTASize ?? null,
+      } as any)
       .where(eq(products.id, data.id))
       .returning();
 

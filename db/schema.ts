@@ -112,40 +112,30 @@ export const clientTopics = pgTable("client_topics", {
 
 // Enums for better type safety and performance
 export const productCategoryEnum = pgEnum('product_category', [
-	'banner',
-	'video',
-	'audio',
-	'interactive',
-	'newsletter',
-	'social',
-	'display',
-	'native'
+	'standardwerbeform',
+	'sonderwerbeform',
+	'kombinationswerbeform',
+	'instream',
+	'inpage',
   ]);
   
   export const formatEnum = pgEnum('format', [
 	'jpg',
 	'png',
 	'gif',
-	'webp',
-	'svg',
-	'mp4',
-	'webm',
-	'html5_zip',
-	'html',
-	'css',
-	'js'
+	'html5',
+	'mp4 (H.264)',
+	'3rd-Party-Redirect',
+	'mp3'
   ]);
   
   export const usageContextEnum = pgEnum('usage_context', [
-	'mobile',
-	'desktop',
-	'tablet',
-	'stationary',
-	'video',
+	'display',
 	'newsletter',
 	'audio',
-	'web',
-	'app'
+	'video',
+	'app',
+	'native'
   ]);
   
   // Main products table
@@ -159,13 +149,21 @@ export const productCategoryEnum = pgEnum('product_category', [
 	height: integer('height'), // in pixels
 	
 	// File sizes in KB
-	weightKb: decimal('weight_kb', { precision: 10, scale: 2 }).notNull(),
+	weightKb: decimal('weight_kb', { precision: 10, scale: 2 }),
 	ecoAdWeightKb: decimal('eco_ad_weight_kb', { precision: 10, scale: 2 }),
 	
 	// Additional useful fields
 	description: varchar('description', { length: 1000 }),
 	isActive: boolean('is_active').default(true),
 	url: text('url'),
+
+	impressionPixel: boolean('impression_pixel').default(false),
+	isEcoAd: boolean('is_eco_ad').default(false),
+	isSkippable: boolean('is_skippable').default(false),
+	maxDuration: integer('max_duration'),
+	maxHeaderSize: integer('max_header_size'),
+	maxTextSize: integer('max_text_size'),
+	maxCTASize: integer('max_cta_size'),
 	
 	// Timestamps
 	createdAt: timestamp('created_at').defaultNow(),

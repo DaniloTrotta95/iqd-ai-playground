@@ -5,7 +5,7 @@ import { Button, buttonVariants } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { ProductWithSpecs } from "@/db/types"
 import { ColumnDef } from "@tanstack/react-table"
-import { ArrowDown, ArrowRight, ArrowUp, ArrowUpDown, Copy, ExternalLink, LinkIcon, MoreHorizontal, Pencil, Trash } from "lucide-react"
+import { ArrowDown, ArrowRight, ArrowUp, ArrowUpDown, CheckCircle, Copy, ExternalLink, LinkIcon, MoreHorizontal, Pencil, Trash, XCircle } from "lucide-react"
 import Link from "next/link"
 import { useState } from "react";
 import EditTechSpecDialog from "@/components/techspecs/edit-techspec-dialog";
@@ -93,27 +93,37 @@ function ActionsCell({ product, onTechSpecUpdated }: ActionsCellProps) {
 
 const getGattungColor = (gattung: string) => {
   switch (gattung.toLowerCase()) {
-    case 'mobile':
-      return 'bg-blue-100 text-blue-800 border-blue-200'
-    case 'desktop':
-      return 'bg-green-100 text-green-800 border-green-200'
-    case 'tablet':
-      return 'bg-purple-100 text-purple-800 border-purple-200'
+    case 'display':
+      return 'bg-indigo-100 text-indigo-800 border-indigo-200 hover:bg-indigo-200 rounded-sm'
+    case 'newsletter':
+      return 'bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-200 rounded-sm'
+    case 'audio':
+      return 'bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-200 rounded-sm'
+    case 'video':
+      return 'bg-red-100 text-red-800 border-red-200 hover:bg-red-200 rounded-sm'
+    case 'app':
+      return 'bg-green-100 text-green-800 border-green-200 hover:bg-green-200 rounded-sm'
+    case 'native':
+      return 'bg-purple-100 text-purple-800 border-purple-200 hover:bg-purple-200 rounded-sm'
     default:
-      return 'bg-gray-100 text-gray-800 border-gray-200'
+      return 'bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200 rounded-sm'
   }
 }
 
 const getKategorieColor = (kategorie: string) => {
   switch (kategorie.toLowerCase()) {
-    case 'banner':
-      return 'bg-orange-100 text-orange-800 border-orange-200'
-    case 'video':
-      return 'bg-red-100 text-red-800 border-red-200'
-    case 'display':
-      return 'bg-indigo-100 text-indigo-800 border-indigo-200'
+    case 'standardwerbeform':
+      return 'bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-200 rounded-sm'
+    case 'sonderwerbeform':
+      return 'bg-fuchsia-100 text-fuchsia-800 border-fuchsia-200 hover:bg-fuchsia-200 rounded-sm'
+    case 'kombinationswerbeform':
+      return 'bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-200 rounded-sm'
+    case 'instream':
+      return 'bg-red-100 text-red-800 border-red-200 hover:bg-red-200 rounded-sm'
+    case 'inpage':
+      return 'bg-indigo-100 text-indigo-800 border-indigo-200 hover:bg-indigo-200 rounded-sm'
     default:
-      return 'bg-gray-100 text-gray-800 border-gray-200'
+      return 'bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200 rounded-sm'
   }
 }
 
@@ -123,7 +133,7 @@ export const createColumnsTechSpec = ({ onTechSpecUpdated }: ColumnsProps): Colu
   {
     accessorKey: "name",
     header: ({ column}) => {
-      return <Button className="w-36" variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+      return <Button className="w-36 justify-start" variant="ghost" size="no-padding"  onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
         Name
         {
           column.getIsSorted() === "asc" ? (
@@ -153,7 +163,7 @@ export const createColumnsTechSpec = ({ onTechSpecUpdated }: ColumnsProps): Colu
   {
     accessorKey: "productCategory",
     header: ({ column}) => {
-      return <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+      return <Button variant="ghost" size="no-padding" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
         Kategorie
         {
           column.getIsSorted() === "asc" ? (
@@ -195,13 +205,13 @@ export const createColumnsTechSpec = ({ onTechSpecUpdated }: ColumnsProps): Colu
       if (!width || !height) {
         return <span className="text-muted-foreground  text-sm">-</span>
       }
-      return <span className="text-sm font-mono">{width} × {height} px</span>
+      return <span  className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200">{width} × {height} px</span>
     },
   },
   {
     accessorKey: "weightKb",
     header: ({ column}) => {
-      return <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+      return <Button variant="ghost" size="no-padding" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
         Gewicht (KB)
         {
           column.getIsSorted() === "asc" ? (
@@ -215,13 +225,13 @@ export const createColumnsTechSpec = ({ onTechSpecUpdated }: ColumnsProps): Colu
     },
     cell: ({ row }) => {
       const weight = row.original.weightKb
-      return <span className="text-sm font-mono">{weight.toFixed(2)} KB</span>
+      return <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200">{weight.toFixed(2)} KB</span>
     },
   },
   {
     accessorKey: "ecoAdWeightKb",
     header: ({ column}) => {
-      return <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+      return <Button variant="ghost" size="no-padding" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
         EcoAdGewicht (KB)
         {
           column.getIsSorted() === "asc" ? (
@@ -238,7 +248,7 @@ export const createColumnsTechSpec = ({ onTechSpecUpdated }: ColumnsProps): Colu
       if (!weight) {
         return <span className="text-muted-foreground text-sm">-</span>
       }
-      return <span className="text-sm font-mono">{weight.toFixed(2)} KB</span>
+      return <span className="inline-flex items-center px-2 py-0.5 rounded  font-medium bg-gray-100 text-gray-800 border border-gray-200 text-xs">{weight.toFixed(2)} KB</span>
     },
   },
   {
@@ -251,14 +261,82 @@ export const createColumnsTechSpec = ({ onTechSpecUpdated }: ColumnsProps): Colu
           href={url}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center text-emerald-600 hover:text-emerald-700 text-sm font-medium"
+          className="flex items-center bg-gray-100 rounded-md p-1 text-gray-800 border border-gray-200 text-sm font-medium aspect-square w-8 h-8 justify-center"
         >
-          <ExternalLink className="w-3 h-3 mr-1" />
-          Link
+          <ExternalLink className="w-4 h-4" />
+          
         </a>
       ) : (
         <span className="text-gray-400">—</span>
       )}
+  },
+  {
+    accessorKey: "isEcoAd",
+    header: "EcoAd",
+    cell: ({ row }) => {
+      const v = row.original.isEcoAd
+      return v ? (
+        <span className="flex items-center justify-center bg-emerald-100 rounded-md p-1 text-emerald-600 aspect-square w-8 h-8"><CheckCircle className="w-5 h-5" /> </span>
+      ) : (
+        <span className="flex items-center justify-center bg-red-100 rounded-md p-1 text-red-600 aspect-square w-8 h-8"><XCircle className="w-5 h-5" /> </span>
+      )
+    }
+  },
+  {
+    accessorKey: "impressionPixel",
+    header: "Impr. Pixel",
+    cell: ({ row }) => {
+      const v = row.original.impressionPixel
+      return v ? (
+        <span className="flex items-center justify-center bg-emerald-100 rounded-md p-1 text-emerald-600 aspect-square w-8 h-8"><CheckCircle className="w-5 h-5" /> </span>
+      ) : (
+        <span className="flex items-center justify-center bg-red-100 rounded-md p-1 text-red-600 aspect-square w-8 h-8"><XCircle className="w-5 h-5" /> </span>
+      )
+    }
+  },
+  {
+    accessorKey: "isSkippable",
+    header: "Skippable",
+    cell: ({ row }) => {
+      const v = row.original.isSkippable
+      return v ? (
+        <span className="flex items-center justify-center bg-emerald-100 rounded-md p-1 text-emerald-600 aspect-square w-8 h-8"><CheckCircle className="w-5 h-5" /> </span>
+      ) : (
+        <span className="flex items-center justify-center bg-red-100 rounded-md p-1 text-red-600 aspect-square w-8 h-8"><XCircle className="w-5 h-5" /> </span>
+      )
+    }
+  },
+  {
+    accessorKey: "maxDuration",
+    header: "Max Dauer (s)",
+    cell: ({ row }) => {
+      const v = row.original.maxDuration
+      return v != null ? <span className="text-sm font-mono">{v}</span> : <span className="text-gray-400">—</span>
+    }
+  },
+  {
+    accessorKey: "maxHeaderSize",
+    header: "Max Header (Zeichen)",
+    cell: ({ row }) => {
+      const v = row.original.maxHeaderSize
+      return v != null ? <span className="text-sm font-mono">{v}</span> : <span className="text-gray-400">—</span>
+    }
+  },
+  {
+    accessorKey: "maxTextSize",
+    header: "Max Text (Zeichen)",
+    cell: ({ row }) => {
+      const v = row.original.maxTextSize
+      return v != null ? <span className="text-sm font-mono">{v}</span> : <span className="text-gray-400">—</span>
+    }
+  },
+  {
+    accessorKey: "maxCTASize",
+    header: "Max CTA (Zeichen)",
+    cell: ({ row }) => {
+      const v = row.original.maxCTASize
+      return v != null ? <span className="text-sm font-mono">{v}</span> : <span className="text-gray-400">—</span>
+    }
   },
   {
     id: "actions",

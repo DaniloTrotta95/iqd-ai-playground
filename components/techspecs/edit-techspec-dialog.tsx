@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import MultipleSelector from "@/components/ui/multi-select"
+import { Switch } from "@/components/ui/switch"
 import { ProductWithSpecs } from "@/db/types"
 import { updateProduct } from "@/actions/product.actions"
 
@@ -18,29 +19,22 @@ interface EditTechSpecDialogProps {
 }
 
 const gattungOptions = [
-  { value: 'mobile', label: 'Mobile' },
-  { value: 'desktop', label: 'Desktop' },
-  { value: 'tablet', label: 'Tablet' },
-  { value: 'stationary', label: 'Stationary' },
-  { value: 'video', label: 'Video' },
+  { value: 'display', label: 'Display' },
   { value: 'newsletter', label: 'Newsletter' },
   { value: 'audio', label: 'Audio' },
-  { value: 'web', label: 'Web' },
+  { value: 'video', label: 'Video' },
   { value: 'app', label: 'App' },
+  { value: 'native', label: 'Native' },
 ]
 
 const formatOptions = [
   { value: 'jpg', label: 'JPG' },
   { value: 'png', label: 'PNG' },
   { value: 'gif', label: 'GIF' },
-  { value: 'webp', label: 'WebP' },
-  { value: 'svg', label: 'SVG' },
-  { value: 'mp4', label: 'MP4' },
-  { value: 'webm', label: 'WebM' },
-  { value: 'html5_zip', label: 'HTML5 ZIP' },
-  { value: 'html', label: 'HTML' },
-  { value: 'css', label: 'CSS' },
-  { value: 'js', label: 'JS' },
+  { value: 'html5', label: 'HTML5' },
+  { value: 'mp4 (H.264)', label: 'MP4 (H.264)' },
+  { value: '3rd-Party-Redirect', label: '3rd-Party-Redirect' },
+  { value: 'mp3', label: 'MP3' },
 ]
 
 export default function EditTechSpecDialog({ product, open, onOpenChange, onProductUpdated }: EditTechSpecDialogProps) {
@@ -53,12 +47,22 @@ export default function EditTechSpecDialog({ product, open, onOpenChange, onProd
   const [weightKb, setWeightKb] = React.useState(String(product.weightKb))
   const [ecoAdWeightKb, setEcoAdWeightKb] = React.useState(product.ecoAdWeightKb != null ? String(product.ecoAdWeightKb) : "")
   const [url, setUrl] = React.useState(product.url || "")
+  const [impressionPixel, setImpressionPixel] = React.useState(Boolean(product.impressionPixel))
+  const [isEcoAd, setIsEcoAd] = React.useState(Boolean(product.isEcoAd))
+  const [isSkippable, setIsSkippable] = React.useState(Boolean(product.isSkippable))
+  const [maxDuration, setMaxDuration] = React.useState(product.maxDuration != null ? String(product.maxDuration) : "")
+  const [maxHeaderSize, setMaxHeaderSize] = React.useState(product.maxHeaderSize != null ? String(product.maxHeaderSize) : "")
+  const [maxTextSize, setMaxTextSize] = React.useState(product.maxTextSize != null ? String(product.maxTextSize) : "")
+  const [maxCTASize, setMaxCTASize] = React.useState(product.maxCTASize != null ? String(product.maxCTASize) : "")
   const [selectedGattung, setSelectedGattung] = React.useState<Array<{ value: string; label: string }>>(
     product.usageContexts.map(uc => ({ value: uc.usageContext, label: uc.usageContext.charAt(0).toUpperCase() + uc.usageContext.slice(1) }))
   )
   const [selectedFormate, setSelectedFormate] = React.useState<Array<{ value: string; label: string }>>(
     product.formats.map(f => ({ value: f.format, label: f.format.toUpperCase() }))
   )
+
+  const hasVideo = React.useMemo(() => selectedGattung.some((v) => v.value === 'video'), [selectedGattung])
+  const hasDisplay = React.useMemo(() => selectedGattung.some((v) => v.value === 'display'), [selectedGattung])
 
   React.useEffect(() => {
     if (!open) return
@@ -69,13 +73,41 @@ export default function EditTechSpecDialog({ product, open, onOpenChange, onProd
     setWeightKb(String(product.weightKb))
     setEcoAdWeightKb(product.ecoAdWeightKb != null ? String(product.ecoAdWeightKb) : "")
     setUrl(product.url || "")
+    setImpressionPixel(Boolean(product.impressionPixel))
+    setIsEcoAd(Boolean(product.isEcoAd))
+    setIsSkippable(Boolean(product.isSkippable))
+    setMaxDuration(product.maxDuration != null ? String(product.maxDuration) : "")
+    setMaxHeaderSize(product.maxHeaderSize != null ? String(product.maxHeaderSize) : "")
+    setMaxTextSize(product.maxTextSize != null ? String(product.maxTextSize) : "")
+    setMaxCTASize(product.maxCTASize != null ? String(product.maxCTASize) : "")
     setSelectedGattung(product.usageContexts.map(uc => ({ value: uc.usageContext, label: uc.usageContext.charAt(0).toUpperCase() + uc.usageContext.slice(1) })))
     setSelectedFormate(product.formats.map(f => ({ value: f.format, label: f.format.toUpperCase() })))
   }, [open, product])
 
+  React.useEffect(() => {
+    if (!isEcoAd) {
+      setEcoAdWeightKb("")
+    }
+  }, [isEcoAd])
+
+  React.useEffect(() => {
+    if (!hasVideo) {
+      setIsSkippable(false)
+      setMaxDuration("")
+    }
+  }, [hasVideo])
+
+  React.useEffect(() => {
+    if (!hasDisplay) {
+      setMaxHeaderSize("")
+      setMaxTextSize("")
+      setMaxCTASize("")
+    }
+  }, [hasDisplay])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!name.trim() || !weightKb.trim() || selectedFormate.length === 0) {
+    if (!name.trim() || selectedFormate.length === 0) {
       alert("Bitte geben Sie einen Namen, Gewicht und mindestens ein Format ein")
       return
     }
@@ -88,12 +120,19 @@ export default function EditTechSpecDialog({ product, open, onOpenChange, onProd
         productCategory: category,
         width: width ? parseInt(width) : null,
         height: height ? parseInt(height) : null,
-        weightKb: parseFloat(weightKb),
+        weightKb: weightKb ? parseFloat(weightKb) : null,
         ecoAdWeightKb: ecoAdWeightKb ? parseFloat(ecoAdWeightKb) : null,
         formats: selectedFormate.map(f => f.value as any),
         description: product.description ?? null,
         usageContexts: selectedGattung.map(g => g.value as any),
         url: url || null,
+        impressionPixel,
+        isEcoAd,
+        isSkippable,
+        maxDuration: maxDuration ? parseInt(maxDuration) : null,
+        maxHeaderSize: maxHeaderSize ? parseInt(maxHeaderSize) : null,
+        maxTextSize: maxTextSize ? parseInt(maxTextSize) : null,
+        maxCTASize: maxCTASize ? parseInt(maxCTASize) : null,
       })
 
       if (result.success) {
@@ -132,14 +171,11 @@ export default function EditTechSpecDialog({ product, open, onOpenChange, onProd
                     <SelectValue placeholder="Kategorie auswählen..." />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="banner">Banner</SelectItem>
-                    <SelectItem value="video">Video</SelectItem>
-                    <SelectItem value="audio">Audio</SelectItem>
-                    <SelectItem value="interactive">Interactive</SelectItem>
-                    <SelectItem value="newsletter">Newsletter</SelectItem>
-                    <SelectItem value="social">Social</SelectItem>
-                    <SelectItem value="display">Display</SelectItem>
-                    <SelectItem value="native">Native</SelectItem>
+                    <SelectItem value="standardwerbeform">Standardwerbeform</SelectItem>
+                    <SelectItem value="sonderwerbeform">Sonderwerbeform</SelectItem>
+                    <SelectItem value="kombinationswerbeform">Kombinationswerbeform</SelectItem>
+                    <SelectItem value="instream">InStream</SelectItem>
+                    <SelectItem value="inpage">InPage</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -195,8 +231,16 @@ export default function EditTechSpecDialog({ product, open, onOpenChange, onProd
                 <Input type="number" step="0.01" value={weightKb} onChange={(e) => setWeightKb(e.target.value)} className="h-11" disabled={isSaving} />
               </div>
               <div className="space-y-2">
-                <Label className="text-sm font-medium text-gray-700">EcoAd Gewicht (KB)</Label>
-                <Input type="number" step="0.01" value={ecoAdWeightKb} onChange={(e) => setEcoAdWeightKb(e.target.value)} className="h-11" disabled={isSaving} />
+                <Label className="text-sm font-medium text-gray-700">EcoAd</Label>
+                <div className="h-11 flex items-center gap-3 border border-gray-200 rounded-md px-3">
+                  <Switch checked={isEcoAd} onCheckedChange={setIsEcoAd} disabled={isSaving} />
+                </div>
+                {isEcoAd && (
+                  <div className="space-y-2 pt-2">
+                    <Label className="text-sm font-medium text-gray-700">EcoAd Gewicht (KB)</Label>
+                    <Input type="number" step="0.01" value={ecoAdWeightKb} onChange={(e) => setEcoAdWeightKb(e.target.value)} className="h-11" disabled={isSaving} />
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -208,9 +252,50 @@ export default function EditTechSpecDialog({ product, open, onOpenChange, onProd
             </div>
           </div>
 
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-gray-700">Impression Pixel</Label>
+                <div className="h-11 flex items-center gap-3 border border-gray-200 rounded-md px-3">
+                  <Switch checked={impressionPixel} onCheckedChange={setImpressionPixel} disabled={isSaving} />
+                </div>
+              </div>
+              {hasVideo && (
+                <>
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-gray-700">Skippable</Label>
+                    <div className="h-11 flex items-center gap-3 border border-gray-200 rounded-md px-3">
+                      <Switch checked={isSkippable} onCheckedChange={setIsSkippable} disabled={isSaving} />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-gray-700">Max. Dauer (Sek.)</Label>
+                    <Input type="number" value={maxDuration} onChange={(e) => setMaxDuration(e.target.value)} className="h-11" disabled={isSaving} />
+                  </div>
+                </>
+              )}
+              {hasDisplay && (
+                <>
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-gray-700">Max. Header Größe (Zeichen)</Label>
+                    <Input type="number" value={maxHeaderSize} onChange={(e) => setMaxHeaderSize(e.target.value)} className="h-11" disabled={isSaving} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-gray-700">Max. Text Größe (Zeichen)</Label>
+                    <Input type="number" value={maxTextSize} onChange={(e) => setMaxTextSize(e.target.value)} className="h-11" disabled={isSaving} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-gray-700">Max. CTA Größe (Zeichen)</Label>
+                    <Input type="number" value={maxCTASize} onChange={(e) => setMaxCTASize(e.target.value)} className="h-11" disabled={isSaving} />
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
           <div className="flex justify-end space-x-3 pt-6 border-t">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="px-6 h-11" disabled={isSaving}>Abbrechen</Button>
-            <Button type="submit" className="px-6 h-11 bg-emerald-600 hover:bg-emerald-700 text-white" disabled={isSaving || !name.trim() || !weightKb.trim() || selectedFormate.length === 0}>
+            <Button type="submit" className="px-6 h-11 bg-emerald-600 hover:bg-emerald-700 text-white" disabled={isSaving || !name.trim() || selectedFormate.length === 0}>
               {isSaving ? "Speichern..." : "Speichern"}
             </Button>
           </div>

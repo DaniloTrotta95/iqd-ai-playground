@@ -207,45 +207,35 @@ export function DataTable<TData, TValue>({
   }, [filters])
 
   const gattungOptions = [
-    { value: 'mobile', label: 'Mobile' },
-    { value: 'desktop', label: 'Desktop' },
-    { value: 'tablet', label: 'Tablet' },
-    { value: 'stationary', label: 'Stationary' },
-    { value: 'video', label: 'Video' },
+    { value: 'display', label: 'Display' },
     { value: 'newsletter', label: 'Newsletter' },
     { value: 'audio', label: 'Audio' },
-    { value: 'web', label: 'Web' },
+    { value: 'video', label: 'Video' },
     { value: 'app', label: 'App' },
+    { value: 'native', label: 'Native' },
   ]
 
   const kategorieOptions = [
-    { value: 'banner', label: 'Banner' },
-    { value: 'video', label: 'Video' },
-    { value: 'audio', label: 'Audio' },
-    { value: 'interactive', label: 'Interactive' },
-    { value: 'newsletter', label: 'Newsletter' },
-    { value: 'social', label: 'Social' },
-    { value: 'display', label: 'Display' },
-    { value: 'native', label: 'Native' },
+    { value: 'standardwerbeform', label: 'Standardwerbeform' },
+    { value: 'sonderwerbeform', label: 'Sonderwerbeform' },
+    { value: 'kombinationswerbeform', label: 'Kombinationswerbeform' },
+    { value: 'instream', label: 'InStream' },
+    { value: 'inpage', label: 'InPage' },
   ]
 
   const formatOptions = [
     { value: 'jpg', label: 'JPG' },
     { value: 'png', label: 'PNG' },
     { value: 'gif', label: 'GIF' },
-    { value: 'webp', label: 'WebP' },
-    { value: 'svg', label: 'SVG' },
-    { value: 'mp4', label: 'MP4' },
-    { value: 'webm', label: 'WebM' },
     { value: 'html5', label: 'HTML5' },
-    { value: 'html', label: 'HTML' },
-    { value: 'css', label: 'CSS' },
-    { value: 'js', label: 'JS' },
+    { value: 'mp4 (H.264)', label: 'MP4 (H.264)' },
+    { value: '3rd-Party-Redirect', label: '3rd-Party-Redirect' },
+    { value: 'mp3', label: 'MP3' },
   ]
 
   return (
     <>
-      <div className="flex items-end gap-4">
+      <div className="flex items-end gap-4 max-2xl:container max-2xl:mx-auto">
         <div className="py-2 px-4 bg-gray-50 rounded-lg border border-gray-200 w-full">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -370,7 +360,7 @@ export function DataTable<TData, TValue>({
         </div>
       </div>
 
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+      <div className="bg-white max-2xl:container max-2xl:mx-auto max-2xl:max-w-[74rem] rounded-lg border border-gray-200 overflow-hidden">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup , index) => (

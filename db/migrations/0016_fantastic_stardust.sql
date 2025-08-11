@@ -1,0 +1,1 @@
+ALTER TABLE "products" ALTER COLUMN "weight_kb" DROP NOT NULL;

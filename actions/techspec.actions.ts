@@ -9,7 +9,7 @@ import { headers } from "next/headers";
 export interface ProductWithSpecs {
   id: number;
   name: string;
-  productCategory: 'banner' | 'video' | 'audio' | 'interactive' | 'newsletter' | 'social' | 'display' | 'native';
+  productCategory: 'standardwerbeform' | 'sonderwerbeform' | 'kombinationswerbeform' | 'instream' | 'inpage';
   width: number | null;
   height: number | null;
   weightKb: number;
@@ -21,8 +21,15 @@ export interface ProductWithSpecs {
   url: string | null;
   formats: Array<{
     id: number;
-    format: 'jpg' | 'png' | 'gif' | 'webp' | 'svg' | 'mp4' | 'webm' | 'html5_zip' | 'html' | 'css' | 'js';
+    format: 'jpg' | 'png' | 'gif' | 'html5' | 'mp4 (H.264)' | '3rd-Party-Redirect' | 'mp3'
   }>;
+  impressionPixel: boolean | null
+  isEcoAd: boolean | null
+  isSkippable: boolean | null
+  maxDuration: number | null
+  maxHeaderSize: number | null
+  maxTextSize: number | null
+  maxCTASize: number | null
   techSpecs: Array<{
     id: number;
     specName: string;
@@ -31,15 +38,15 @@ export interface ProductWithSpecs {
   }>;
   usageContexts: Array<{
     id: number;
-    usageContext: 'mobile' | 'desktop' | 'tablet' | 'stationary' | 'video' | 'newsletter' | 'audio' | 'web' | 'app';
+    usageContext: 'display' | 'newsletter' | 'audio' | 'video' | 'app' | 'native';
   }>;
 }
 
 export interface TechSpecFilters {
   name?: string;
-  gattung?: Array<'mobile' | 'desktop' | 'tablet' | 'stationary' | 'video' | 'newsletter' | 'audio' | 'web' | 'app'>; // usage contexts
-  kategorie?: Array<'banner' | 'video' | 'audio' | 'interactive' | 'newsletter' | 'social' | 'display' | 'native'>;
-  format?: Array<'jpg' | 'png' | 'gif' | 'webp' | 'svg' | 'mp4' | 'webm' | 'html5' | 'html5_zip' | 'html' | 'css' | 'js'>;
+  gattung?: Array<'display' | 'newsletter' | 'audio' | 'video' | 'app' | 'native'>;
+  kategorie?: Array<'standardwerbeform' | 'sonderwerbeform' | 'kombinationswerbeform' | 'instream' | 'inpage'>;
+  format?: Array<'jpg' | 'png' | 'gif' | 'html5' | 'mp4 (H.264)' | '3rd-Party-Redirect' | 'mp3'>;
   widthMin?: number;
   widthMax?: number;
   heightMin?: number;
@@ -99,6 +106,13 @@ export const getTechSpecs = async () => {
 			techSpecs: techSpecsByProduct[product.id] || [],
 			url: product.url || null,
 			usageContexts: usageContextsByProduct[product.id] || [],
+			impressionPixel: product.impressionPixel ?? null,
+			isEcoAd: product.isEcoAd ?? null,
+			isSkippable: product.isSkippable ?? null,
+			maxDuration: product.maxDuration ?? null,
+			maxHeaderSize: product.maxHeaderSize ?? null,
+			maxTextSize: product.maxTextSize ?? null,
+			maxCTASize: product.maxCTASize ?? null,
 		}));
 		
 		return { success: true, data: productsWithSpecs };
@@ -161,13 +175,12 @@ export const getTechSpecsFiltered = async (filters: TechSpecFilters) => {
       baseProducts = baseProducts.filter((p) => allowedIds.has(p.id));
     }
 
-    // Filter by formats if provided (map 'html5' -> 'html5_zip')
+    // Filter by formats if provided
     if (filters.format && filters.format.length > 0) {
-      const mapped = filters.format.map((f) => (f === 'html5' ? 'html5_zip' : f)) as any[];
       const idsByFormat = await db
         .select({ productId: productFormats.productId })
         .from(productFormats)
-        .where(inArray(productFormats.format, mapped as any));
+        .where(inArray(productFormats.format, filters.format as any));
       const allowedIds = new Set(idsByFormat.map((r) => r.productId));
       baseProducts = baseProducts.filter((p) => allowedIds.has(p.id));
     }
@@ -220,19 +233,6 @@ export const getTechSpecsFiltered = async (filters: TechSpecFilters) => {
   }
 };
 
-export const getMobileVideoProducts = async () => {
-  return await db
-  .select()
-  .from(products)
-  .innerJoin(productUsageContexts, eq(products.id, productUsageContexts.productId))
-  .innerJoin(productFormats, eq(products.id, productFormats.productId))
-  .where(
-    and(
-      inArray(productUsageContexts.usageContext, ['mobile', 'video']),
-      eq(productFormats.format, 'mp4')
-    )
-  );
-};
 
 // // Filter by dimensions and weight
 // const lightweightBanners = await db
