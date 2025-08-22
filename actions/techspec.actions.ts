@@ -233,6 +233,33 @@ export const getTechSpecsFiltered = async (filters: TechSpecFilters) => {
   }
 };
 
+export const getTechSpecByName = async (name: string): Promise<string | null> => {
+  try {
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+
+    if (!session || !session.user) {
+      throw new Error("Unauthorized");
+    }
+
+    // Find product by name
+    const product = await db
+      .select()
+      .from(products)
+      .where(eq(products.name, name))
+      .limit(1);
+
+    if (product.length === 0) {
+      return null;
+    }
+
+    return product[0].url;
+  } catch (error) {
+    console.error("Error fetching tech spec by name:", error);
+    return null;
+  }
+};
 
 // // Filter by dimensions and weight
 // const lightweightBanners = await db

@@ -1,4 +1,4 @@
-import { Calendar, Home, Inbox, Proportions, Search, Settings } from "lucide-react"
+import { Brain, Calendar, Home, Inbox, Proportions, Search, Settings } from "lucide-react"
 
 import {
   Sidebar,
@@ -27,6 +27,11 @@ const items = [
     title: "TechSpecs",
     url: "/techspec",
     icon: Proportions,
+  },
+  {
+    title: "Argumentation",
+    url: "/argumentation",
+    icon: Brain,
   },
   // {
   //   title: "Agenten",
