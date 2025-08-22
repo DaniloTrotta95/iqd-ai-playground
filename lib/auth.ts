@@ -12,6 +12,22 @@ export const auth = betterAuth({
 	}),
 	plugins: [nextCookies(), admin()], // make sure this is the last plugin in the array
 
+	// Add trusted origins configuration
+	trustedOrigins: [
+		// Local development
+		"http://localhost:3000",
+		"http://127.0.0.1:3000",
+		"*.vercel.app",
+		// Production
+		// process.env.BETTER_AUTH_URL,
+		// Preview deployments (Vercel pattern)
+		
+		// Additional origins from environment variable (comma-separated)
+		// ...(process.env.ADDITIONAL_TRUSTED_ORIGINS?.split(",").map(origin => origin.trim()) || []),
+		// Add your specific production domain if different
+		// "https://yourdomain.com",
+	].filter(Boolean),
+
 	emailAndPassword: {
 		enabled: true,
 		// TODO: add email verification -> MVP is not required
